@@ -11,7 +11,9 @@
     "typecheck": "pnpm -r typecheck && tsc -p tools",
     "test": "vitest run",
     "build": "pnpm --filter @rfm-matrix/app build",
-    "check:hosts": "node tools/checks/check-hosts.ts packages/app/dist"
+    "check:hosts": "node tools/checks/check-hosts.ts packages/app/dist",
+    "bench:generate": "node tools/bench/generate.ts",
+    "bench:run": "pnpm build && node tools/bench/run.ts"
   },
   "devDependencies": {
     "@biomejs/biome": "2.5.15",

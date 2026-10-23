@@ -21,7 +21,6 @@ export type DoneMessage = {
   monetaryTotal: number;
   problems: { row: number; message: string }[];
   elapsedMs: number;
-  peakHeapBytes: number | null;
 };
 
 export type ErrorMessage = { type: 'error'; message: string };

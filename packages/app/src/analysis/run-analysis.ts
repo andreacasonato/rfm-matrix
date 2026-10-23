@@ -22,12 +22,6 @@ function findColumns(header: string[], names: ColumnNames): ColumnIndexes {
   };
 }
 
-// Chrome exposes a non-standard heap size; other browsers report null.
-function heapBytes(): number | null {
-  const memory = (performance as { memory?: { usedJSHeapSize: number } }).memory;
-  return memory ? memory.usedJSHeapSize : null;
-}
-
 export async function runAnalysis(
   source: Blob | string,
   names: ColumnNames,
@@ -41,7 +35,6 @@ export async function runAnalysis(
   let rowsUsed = 0;
   let lastPostAt = started;
   let lastPostRows = 0;
-  let peakHeapBytes = heapBytes();
 
   try {
     const summary = await streamCsv(
@@ -65,10 +58,6 @@ export async function runAnalysis(
             time - lastPostAt >= progressEveryMs ||
             rowsRead - lastPostRows >= progressEveryRows
           ) {
-            const heap = heapBytes();
-            if (heap !== null && (peakHeapBytes === null || heap > peakHeapBytes)) {
-              peakHeapBytes = heap;
-            }
             post({ type: 'progress', rowsRead, bytesRead, customers: aggregator.customerCount });
             lastPostAt = time;
             lastPostRows = rowsRead;
@@ -94,7 +83,6 @@ export async function runAnalysis(
       monetaryTotal,
       problems: summary.problems.slice(0, 10),
       elapsedMs: now() - started,
-      peakHeapBytes,
     });
   } catch (error) {
     post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
