@@ -6,7 +6,7 @@
   "scripts": {
     "dev": "vite",
     "build": "vite build",
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
   },
   "dependencies": {
     "@rfm-matrix/core": "workspace:*",
@@ -15,9 +15,11 @@
     "react-dom": "19.3.0"
   },
   "devDependencies": {
+    "@types/node": "24.19.1",
     "@types/react": "19.3.0",
     "@types/react-dom": "19.3.0",
     "typescript": "7.0.2",
-    "vite": "8.3.3"
+    "vite": "8.3.3",
+    "vitest": "5.0.3"
   }
 }

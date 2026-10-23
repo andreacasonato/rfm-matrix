@@ -29,3 +29,8 @@ export type CustomerScore = {
   m: Score;
   segmentId: string;
 };
+
+export type { Aggregator, CustomerAggregate } from './aggregate';
+export { aggregate, createAggregator } from './aggregate';
+export type { ColumnIndexes } from './order-row';
+export { toOrderRow } from './order-row';

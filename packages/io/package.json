@@ -7,12 +7,16 @@
     ".": "./src/index.ts"
   },
   "scripts": {
-    "typecheck": "tsc -p ."
+    "typecheck": "tsc -p . && tsc -p tsconfig.test.json"
   },
   "dependencies": {
-    "@rfm-matrix/core": "workspace:*"
+    "@rfm-matrix/core": "workspace:*",
+    "papaparse": "5.7.0"
   },
   "devDependencies": {
-    "typescript": "7.0.2"
+    "@types/node": "24.19.1",
+    "@types/papaparse": "5.5.2",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
   }
 }
