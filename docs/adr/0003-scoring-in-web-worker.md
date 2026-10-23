@@ -1,6 +1,6 @@
 # ADR-0003: Parse and score in a Web Worker
 
-- Status: Accepted, to be confirmed or revised by the M1 benchmark
+- Status: Accepted; confirmed by the M1 benchmark on 2026-10-23
 - Date: 2026-10-21
 
 ## Context
@@ -30,4 +30,28 @@ background work when a task takes longer than about 10 s. A 1M-row file is estim
 
 ## Notes
 
-M1 results: _to be filled in_.
+M1 results, 2026-10-23 (`pnpm bench:generate --rows 1000000 --seed 1`, then `pnpm bench:run`):
+
+| Item | Value |
+| --- | --- |
+| Reference laptop | Apple M1, 8 cores, 8 GB RAM (maintainer's machine, approved in ADR-0008) |
+| Browser | Chromium 156.0.8078.4, headless, driven by Playwright 1.64.0 |
+| File | Synthetic Shopify-style CSV, 1,000,000 rows, 290 MB, 302,807 customers, 604,692 orders |
+| Measured | File picked → per-customer totals ready, 20 runs |
+| p50 / p95 | 4.6 s / 6.8 s (target 30 s / 60 s) |
+| Longest main-thread task | None over 50 ms, the Long Tasks API threshold (target 100 ms) |
+| Peak memory, all browser processes | 750 MB |
+| Correctness | Every run matched the generator's row, customer, order and revenue totals |
+| Cancel | Stops the worker; no result arrives afterwards |
+
+An earlier identical session measured 4.5 s / 5.5 s; the spread comes from the laptop, not
+the file.
+
+Limits of this result:
+
+- Parsing and aggregation only. Scoring and segmenting about 300,000 customers is added in
+  M2/S4 and is not yet measured.
+- Chromium only. Firefox and Safari are not measured; the 100k-row CI benchmark (M5) should
+  cover more than one engine.
+- Memory grows with customers and orders, not rows, because each customer keeps its order IDs
+  until the end. 750 MB is acceptable on an 8 GB laptop, but it is the first limit to watch.
