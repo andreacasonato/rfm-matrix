@@ -13,6 +13,7 @@ consequences, governance, notes.
 | [0005](0005-mit-license.md) | MIT license | Accepted |
 | [0006](0006-libraries-and-versions.md) | Libraries, pinned versions and licenses | Accepted, XLSX parser open |
 | [0007](0007-dev-tooling.md) | Dev tooling: Biome, type packages, CI actions | Accepted |
+| [0008](0008-papaparse-types.md) | Type definitions for Papa Parse | Accepted |
 
 ## Template
 
