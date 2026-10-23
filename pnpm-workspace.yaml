@@ -1,0 +1,6 @@
+packages:
+  - packages/*
+
+# ADR-0006: exact versions only, and nothing published less than 14 days ago.
+savePrefix: ''
+minimumReleaseAge: 20160

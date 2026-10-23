@@ -1,0 +1,22 @@
+{
+  "name": "rfm-matrix",
+  "private": true,
+  "type": "module",
+  "packageManager": "pnpm@12.10.1",
+  "engines": {
+    "node": ">=24 <25"
+  },
+  "scripts": {
+    "lint": "biome check .",
+    "typecheck": "pnpm -r typecheck && tsc -p tools",
+    "test": "vitest run",
+    "build": "pnpm --filter @rfm-matrix/app build",
+    "check:hosts": "node tools/checks/check-hosts.ts packages/app/dist"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.5.15",
+    "@types/node": "24.19.1",
+    "typescript": "7.0.2",
+    "vitest": "5.0.3"
+  }
+}
