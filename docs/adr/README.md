@@ -12,6 +12,7 @@ consequences, governance, notes.
 | [0004](0004-scoring-method.md) | Quantile scores with value-based ties; fixed frequency breaks | Accepted |
 | [0005](0005-mit-license.md) | MIT license | Accepted |
 | [0006](0006-libraries-and-versions.md) | Libraries, pinned versions and licenses | Accepted, XLSX parser open |
+| [0007](0007-dev-tooling.md) | Dev tooling: Biome, type packages, CI actions | Accepted |
 
 ## Template
 
