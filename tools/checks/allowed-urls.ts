@@ -14,6 +14,10 @@ export const allowedUrls: AllowedUrl[] = [
     reason: 'XML namespace identifier (React DOM)',
   },
   {
+    prefix: 'https://github.com/mholt/PapaParse',
+    reason: 'Project link in the Papa Parse @license comment, which MIT requires us to keep',
+  },
+  {
     prefix: 'https://react.dev/errors/',
     reason: 'Text in minified React error messages; shown, never requested',
   },
