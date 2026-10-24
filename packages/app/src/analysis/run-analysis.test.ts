@@ -1,8 +1,13 @@
 import { describe, expect, it } from 'vitest';
-import type { WorkerMessage } from './protocol';
+import type { AnalysisPlan, WorkerMessage } from './protocol';
 import { runAnalysis } from './run-analysis';
 
-const columns = { customer: 'Email', orderId: 'Name', orderedAt: 'Created at', amount: 'Total' };
+// Header: Name,Email,Created at,Total,Lineitem name
+const plan: AnalysisPlan = {
+  mapping: { orderId: 0, email: 1, orderedAt: 2, amount: 3 },
+  read: { decimal: '.', dateOrder: 'dmy' },
+  amountLevel: 'order',
+};
 const header = 'Name,Email,Created at,Total,Lineitem name';
 const csv = [
   header,
@@ -20,7 +25,7 @@ const csv = [
 async function run(text: string, chunkSize?: number) {
   const messages: WorkerMessage[] = [];
   let clock = 0;
-  await runAnalysis(text, columns, (m) => messages.push(m), {
+  await runAnalysis(text, plan, (m) => messages.push(m), {
     now: () => (clock += 300),
     ...(chunkSize === undefined ? {} : { chunkSize }),
   });
@@ -53,18 +58,23 @@ describe('runAnalysis', () => {
     expect(progress.at(-1)).toMatchObject({ rowsRead: 9, customers: 6 });
   });
 
-  it('reports a missing required column by name', async () => {
-    const messages = await run('Name,Email,Total\n#1,a@example.test,1');
-    expect(messages).toEqual([{ type: 'error', message: 'Missing column: Created at' }]);
+  it('refuses a file whose columns no longer match the plan', async () => {
+    const messages = await run('Name,Email\n#1,a@example.test');
+    expect(messages).toEqual([
+      { type: 'error', message: 'Order date points to a column that is not in this file.' },
+    ]);
   });
 
   it('reads the file with the format chosen on the upload screen', async () => {
-    // A forced semicolon turns each comma-separated line into one cell, so no column matches.
+    // A forced semicolon turns each comma-separated line into one cell, so columns go missing.
     const messages: WorkerMessage[] = [];
-    await runAnalysis(new Blob([csv]), columns, (m) => messages.push(m), {
+    await runAnalysis(new Blob([csv]), plan, (m) => messages.push(m), {
       format: { delimiter: ';', encoding: 'utf-8' },
     });
-    expect(messages.at(-1)).toEqual({ type: 'error', message: 'Missing column: Email' });
+    expect(messages.at(-1)).toEqual({
+      type: 'error',
+      message: 'Email points to a column that is not in this file.',
+    });
   });
 
   it('blocks scoring with fewer than 5 customers', async () => {

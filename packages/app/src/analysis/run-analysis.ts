@@ -1,44 +1,30 @@
 // The worker's job, kept free of worker globals so it can be tested in Node.
 import {
   applySegments,
-  type ColumnIndexes,
   createAggregator,
   defaultSegmentMap,
   score,
   summariseSegments,
   toOrderRow,
+  validateMapping,
 } from '@rfm-matrix/core';
 import { streamCsv } from '@rfm-matrix/io';
-import type { ColumnNames, CsvFormat, WorkerMessage } from './protocol';
+import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 
 const progressEveryMs = 250;
 const progressEveryRows = 50_000;
 
 type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
-function findColumns(header: string[], names: ColumnNames): ColumnIndexes {
-  const indexOf = (name: string) => {
-    const index = header.findIndex((cell) => cell.trim() === name);
-    if (index < 0) throw new Error(`Missing column: ${name}`);
-    return index;
-  };
-  return {
-    customer: indexOf(names.customer),
-    orderId: indexOf(names.orderId),
-    orderedAt: indexOf(names.orderedAt),
-    amount: indexOf(names.amount),
-  };
-}
-
 export async function runAnalysis(
   source: Blob | string,
-  names: ColumnNames,
+  plan: AnalysisPlan,
   post: (message: WorkerMessage) => void,
   { now = () => performance.now(), chunkSize, format = {} }: Options = {},
 ): Promise<void> {
   const started = now();
-  const aggregator = createAggregator();
-  let columns: ColumnIndexes | undefined;
+  const aggregator = createAggregator({ amountLevel: plan.amountLevel });
+  let headerChecked = false;
   let rowsRead = 0;
   let rowsUsed = 0;
   let lastPostAt = started;
@@ -49,16 +35,16 @@ export async function runAnalysis(
       source,
       {
         onHeader(header) {
-          columns = findColumns(header, names);
+          // The plan was made from a preview of this file; refuse it if the columns differ.
+          const [problem] = validateMapping(plan.mapping, header);
+          if (problem) throw new Error(problem);
+          headerChecked = true;
         },
         onRows(rows, bytesRead) {
-          if (!columns) return;
+          if (!headerChecked) return;
           for (const cells of rows) {
-            const row = toOrderRow(cells, columns);
-            if (row) {
-              aggregator.add(row);
-              rowsUsed++;
-            }
+            const row = toOrderRow(cells, plan.mapping, plan.read);
+            if (row && aggregator.add(row)) rowsUsed++;
           }
           rowsRead += rows.length;
           const time = now();

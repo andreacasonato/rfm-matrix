@@ -1,13 +1,14 @@
 // Messages between the page and the analysis worker (ADR-0003).
-import type { SegmentsSummary } from '@rfm-matrix/core';
+import type { AmountLevel, ColumnMapping, ReadSettings, SegmentsSummary } from '@rfm-matrix/core';
 import type { CsvPreview, TextEncodingName, UnreadableKind } from '@rfm-matrix/io';
 
-export type ColumnNames = { customer: string; orderId: string; orderedAt: string; amount: string };
+/** How to turn the file's rows into orders (ADR-0012), confirmed on the Map columns screen. */
+export type AnalysisPlan = { mapping: ColumnMapping; read: ReadSettings; amountLevel: AmountLevel };
 
 /** How to read the file; missing fields are detected. */
 export type CsvFormat = { encoding?: TextEncodingName; delimiter?: string };
 
-export type StartMessage = { type: 'start'; file: Blob; columns: ColumnNames; format: CsvFormat };
+export type StartMessage = { type: 'start'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
 export type PreviewRequest = { type: 'preview'; file: Blob; format: CsvFormat };
 export type WorkerRequest = StartMessage | PreviewRequest;
 

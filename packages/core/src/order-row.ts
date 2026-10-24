@@ -1,24 +1,39 @@
-// Turns one parsed row of cells into an OrderRow, given which column holds which field.
-// Column presets and date formats other than ISO 8601 arrive with slice S2.
+// Turns one parsed row of cells into an OrderRow through the user's column mapping (ADR-0012).
 import type { OrderRow } from './index';
+import type { ColumnMapping, Field } from './presets';
+import { type DateOrder, type DecimalSeparator, parseAmount, parseDate } from './values';
 
-export type ColumnIndexes = {
-  customer: number;
-  orderId: number;
-  orderedAt: number;
-  amount: number;
-};
+export type ReadSettings = { decimal: DecimalSeparator; dateOrder: DateOrder };
 
-export function toOrderRow(cells: string[], columns: ColumnIndexes): OrderRow | undefined {
-  const customerKey = cells[columns.customer]?.trim();
-  const orderId = cells[columns.orderId]?.trim();
-  const dateText = cells[columns.orderedAt]?.trim();
-  const amountText = cells[columns.amount]?.trim();
-  if (!customerKey || !orderId || !dateText || amountText === undefined) return undefined;
+/** The row, or undefined when it cannot be used: no customer, no order ID, bad date or amount. */
+export function toOrderRow(
+  cells: string[],
+  mapping: ColumnMapping,
+  settings: ReadSettings,
+): OrderRow | undefined {
+  const get = (field: Field) => {
+    const index = mapping[field];
+    return index === undefined ? undefined : cells[index]?.trim();
+  };
+  // SCHEMA.md: the customer ID when there is one, otherwise the lower-cased email.
+  const customerKey = get('customerId') || get('email')?.toLowerCase();
+  const orderId = get('orderId');
+  const dateText = get('orderedAt');
+  const amountText = get('amount');
+  if (!customerKey || !orderId || dateText === undefined || amountText === undefined) {
+    return undefined;
+  }
 
-  const time = Date.parse(dateText);
-  const amount = amountText === '' ? 0 : Number(amountText);
-  if (Number.isNaN(time) || !Number.isFinite(amount)) return undefined;
-
-  return { customerKey, orderId, orderedAt: new Date(time), amount };
+  const row: OrderRow = { customerKey, orderId };
+  if (dateText) {
+    const time = parseDate(dateText, settings.dateOrder);
+    if (Number.isNaN(time)) return undefined;
+    row.orderedAt = new Date(time);
+  }
+  const amount = parseAmount(amountText, settings.decimal);
+  if (Number.isNaN(amount)) return undefined;
+  if (amount !== null) row.amount = amount;
+  const status = get('status');
+  if (status) row.status = status;
+  return row;
 }

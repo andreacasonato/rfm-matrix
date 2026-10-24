@@ -13,5 +13,5 @@ scope.onmessage = (event) => {
   const request = event.data;
   const post = (message: WorkerMessage) => scope.postMessage(message);
   if (request.type === 'preview') void runPreview(request.file, request.format, post);
-  else void runAnalysis(request.file, request.columns, post, { format: request.format });
+  else void runAnalysis(request.file, request.plan, post, { format: request.format });
 };

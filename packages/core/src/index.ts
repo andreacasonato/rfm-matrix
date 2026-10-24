@@ -2,11 +2,13 @@
 
 export type Score = 1 | 2 | 3 | 4 | 5;
 
+// TRD §7, refined by ADR-0012: an empty date or amount cell is left out, not read as 0, so
+// later product lines of an order can carry neither.
 export type OrderRow = {
   customerKey: string;
   orderId: string;
-  orderedAt: Date;
-  amount: number;
+  orderedAt?: Date;
+  amount?: number;
   status?: string;
 };
 
@@ -30,12 +32,20 @@ export type CustomerScore = {
   segmentId: string;
 };
 
-export type { Aggregator, CustomerAggregate } from './aggregate';
+export type { Aggregator, AmountLevel, CustomerAggregate } from './aggregate';
 export { aggregate, createAggregator } from './aggregate';
-export type { ColumnIndexes } from './order-row';
+export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';
 export type { Breakpoints } from './percentile';
 export { percentileInc, quintileBreakpoints } from './percentile';
+export type { ColumnMapping, Field, Preset, PresetId } from './presets';
+export {
+  detectPreset,
+  fieldLabels,
+  guessMapping,
+  presets,
+  validateMapping,
+} from './presets';
 export type { BinSizes, ScoredCustomer, ScoreResult } from './score';
 export { NotEnoughCustomersError, score } from './score';
 export type { Segment, SegmentMap, ValidationResult } from './segments';

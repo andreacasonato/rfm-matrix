@@ -1,6 +1,6 @@
 // Processing, then the segment counts. The styled grid replaces the list in slice S5.
 import { useEffect, useRef, useState } from 'react';
-import type { ColumnNames, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
+import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
 import { type JobHandle, startAnalysis } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
@@ -8,12 +8,13 @@ import { SegmentList } from '../SegmentList';
 
 type Props = {
   label: string;
-  load(): Promise<Blob>;
-  format: CsvFormat;
-  columns: ColumnNames;
+  /** The file plus how to read it, loaded when the screen opens. */
+  load(): Promise<AnalysisInput>;
   onStartOver(): void;
   analyse?: typeof startAnalysis;
 };
+
+export type AnalysisInput = { source: Blob; plan: AnalysisPlan; format: CsvFormat };
 
 type State =
   | { status: 'running'; progress?: ProgressMessage }
@@ -25,14 +26,7 @@ const count = (n: number) => n.toLocaleString('en-US');
 
 const isCancel = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
 
-export function ResultsScreen({
-  label,
-  load,
-  format,
-  columns,
-  onStartOver,
-  analyse = startAnalysis,
-}: Props) {
+export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysis }: Props) {
   const [state, setState] = useState<State>({ status: 'running' });
   const job = useRef<JobHandle<DoneMessage> | null>(null);
 
@@ -40,9 +34,9 @@ export function ResultsScreen({
     let stopped = false;
     const started = performance.now();
     load().then(
-      (source) => {
+      ({ source, plan, format }) => {
         if (stopped) return;
-        const current = analyse(source, columns, format, (progress) =>
+        const current = analyse(source, plan, format, (progress) =>
           setState({ status: 'running', progress }),
         );
         job.current = current;
@@ -60,7 +54,7 @@ export function ResultsScreen({
       stopped = true;
       job.current?.cancel();
     };
-  }, [load, columns, format, analyse]);
+  }, [load, analyse]);
 
   function cancel() {
     job.current?.cancel();

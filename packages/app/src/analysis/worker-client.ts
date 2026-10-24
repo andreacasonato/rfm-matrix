@@ -1,7 +1,7 @@
 // Runs one job in a fresh worker from the page. Cancel stops the worker immediately.
 import type { UnreadableKind } from '@rfm-matrix/io';
 import type {
-  ColumnNames,
+  AnalysisPlan,
   CsvFormat,
   DoneMessage,
   PreviewDoneMessage,
@@ -59,12 +59,12 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
 
 export const startAnalysis = (
   file: Blob,
-  columns: ColumnNames,
+  plan: AnalysisPlan,
   format: CsvFormat,
   onProgress: (progress: ProgressMessage) => void,
 ) =>
   startJob<DoneMessage, ProgressMessage>(
-    { type: 'start', file, columns, format },
+    { type: 'start', file, plan, format },
     'done',
     'progress',
     onProgress,

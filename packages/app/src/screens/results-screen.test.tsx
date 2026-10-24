@@ -3,7 +3,6 @@ import { act, cleanup, fireEvent, render, screen } from '@testing-library/react'
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { DoneMessage } from '../analysis/protocol';
 import { ResultsScreen } from './ResultsScreen';
-import { shopifyColumns } from './shopify-columns';
 
 afterEach(cleanup);
 
@@ -21,9 +20,16 @@ function fakeAnalysis() {
 
 const props = {
   label: 'orders.csv',
-  load: () => Promise.resolve(new Blob(['x'])),
-  format: {},
-  columns: shopifyColumns,
+  load: () =>
+    Promise.resolve({
+      source: new Blob(['x']),
+      plan: {
+        mapping: { orderId: 0, email: 1, orderedAt: 2, amount: 3 },
+        read: { decimal: '.' as const, dateOrder: 'dmy' as const },
+        amountLevel: 'order' as const,
+      },
+      format: {},
+    }),
   onStartOver: () => {},
 };
 
