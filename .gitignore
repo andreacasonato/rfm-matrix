@@ -5,3 +5,5 @@ coverage/
 .DS_Store
 .env*
 bench-data/
+test-results/
+playwright-report/

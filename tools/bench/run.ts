@@ -1,5 +1,6 @@
 // Usage: node tools/bench/run.ts [--rows 1000000] [--runs 20]
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
+// Timed from file picked to segment counts ready: parse, aggregate, score and segment.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 import { resolve } from 'node:path';
@@ -73,6 +74,14 @@ try {
       ['unusable rows', result.invalidRows, expected.unusableRows],
       ['customers', result.customers, expected.customers],
       ['orders', result.orders, expected.orders],
+      [
+        'customers across segments',
+        result.segments.segments.reduce(
+          (n: number, seg: { customers: number }) => n + seg.customers,
+          0,
+        ),
+        expected.customers,
+      ],
     ];
     for (const [name, got, want] of checks) {
       if (got !== want) mismatches.push(`run ${run}: ${name} ${got}, expected ${want}`);

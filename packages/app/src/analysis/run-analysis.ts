@@ -1,5 +1,13 @@
 // The worker's job, kept free of worker globals so it can be tested in Node.
-import { type ColumnIndexes, createAggregator, toOrderRow } from '@rfm-matrix/core';
+import {
+  applySegments,
+  type ColumnIndexes,
+  createAggregator,
+  defaultSegmentMap,
+  score,
+  summariseSegments,
+  toOrderRow,
+} from '@rfm-matrix/core';
 import { streamCsv } from '@rfm-matrix/io';
 import type { ColumnNames, WorkerMessage } from './protocol';
 
@@ -67,9 +75,12 @@ export async function runAnalysis(
       chunkSize === undefined ? {} : { chunkSize },
     );
 
+    const customers = aggregator.customers();
+    const scores = score(customers);
+    const segmented = applySegments(scores.customers, defaultSegmentMap);
     let orders = 0;
     let monetaryTotal = 0;
-    for (const customer of aggregator.customers()) {
+    for (const customer of customers) {
       orders += customer.orderCount;
       monetaryTotal += customer.monetary;
     }
@@ -82,6 +93,8 @@ export async function runAnalysis(
       orders,
       monetaryTotal,
       problems: summary.problems.slice(0, 10),
+      analysisDate: scores.analysisDate.toISOString().slice(0, 10),
+      segments: summariseSegments(segmented, defaultSegmentMap),
       elapsedMs: now() - started,
     });
   } catch (error) {
