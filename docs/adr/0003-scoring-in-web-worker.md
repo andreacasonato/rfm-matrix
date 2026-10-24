@@ -50,8 +50,14 @@ the file.
 Limits of this result:
 
 - Parsing and aggregation only. Scoring and segmenting about 300,000 customers is added in
-  M2/S4 and is not yet measured.
+  M2/S4 and is not yet measured. (Measured in M2; see below.)
 - Chromium only. Firefox and Safari are not measured; the 100k-row CI benchmark (M5) should
   cover more than one engine.
 - Memory grows with customers and orders, not rows, because each customer keeps its order IDs
   until the end. 750 MB is acceptable on an 8 GB laptop, but it is the first limit to watch.
+
+M2 update, 2026-10-24: same file, laptop and browser, now timed from file picked to segment
+counts ready (parse, aggregate, score with ADR-0010 percentiles, apply the default map,
+summarise). 20 runs: p50 4.4 s, p95 5.5 s; no main-thread task over 50 ms; peak memory of all
+browser processes 796 MB; segment counts added up to the customer count in every run. Scoring
+adds no measurable time next to parsing.
