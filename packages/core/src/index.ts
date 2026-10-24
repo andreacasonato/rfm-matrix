@@ -38,3 +38,7 @@ export type { Breakpoints } from './percentile';
 export { percentileInc, quintileBreakpoints } from './percentile';
 export type { BinSizes, ScoredCustomer, ScoreResult } from './score';
 export { NotEnoughCustomersError, score } from './score';
+export type { Segment, SegmentMap, ValidationResult } from './segments';
+export { applySegments, cellIndex, defaultSegmentMap, segmentFor, validateMap } from './segments';
+export type { SegmentSummary, SegmentsSummary } from './summary';
+export { summariseSegments } from './summary';
