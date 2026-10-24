@@ -1,0 +1,83 @@
+/* Design tokens from docs/DESIGN_BRIEF.md. The only file where raw colour values are allowed;
+   everything else uses these through Tailwind classes (DESIGN.md). */
+
+@theme {
+  /* Replace Tailwind's default palette entirely. */
+  --color-*: initial;
+
+  --color-canvas: #eef0f2;
+  --color-surface: #ffffff;
+  --color-border: #e3e5e8;
+  --color-text-primary: #16181d;
+  --color-text-secondary: #5f6672;
+  --color-action-primary: #f2541b;
+  --color-action-text: #b93a0e;
+  /* Text on the orange fill is always dark: white fails contrast (DESIGN_BRIEF). */
+  --color-on-action: #16181d;
+  --color-heat-1: #fff1ea;
+  --color-heat-2: #ffd5c2;
+  --color-heat-3: #ffae8a;
+  --color-heat-4: #ff7f4d;
+  --color-heat-5: #f2541b;
+  --color-positive: #0e7342;
+  --color-positive-tint: #e7f6ee;
+  --color-warning: #a15c00;
+  --color-warning-tint: #fff4e0;
+  --color-negative: #c2263a;
+  --color-negative-tint: #fdecee;
+  /* The tooltip stays dark in both themes. */
+  --color-tooltip: #16181d;
+  --color-on-tooltip: #eceef1;
+
+  --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
+  --font-mono: "Geist Mono", ui-monospace, monospace;
+
+  --radius-control: 8px;
+  --radius-panel: 12px;
+  --radius-cell: 6px;
+}
+
+/* Dark theme: follows the system unless the page sets data-theme. */
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --color-canvas: #0f1115;
+    --color-surface: #171a20;
+    --color-border: #2a2e36;
+    --color-text-primary: #eceef1;
+    --color-text-secondary: #a3a9b4;
+    --color-action-primary: #ff6a33;
+    --color-action-text: #ff8a5c;
+    --color-heat-1: #2a1c16;
+    --color-heat-2: #4a2516;
+    --color-heat-3: #7a3415;
+    --color-heat-4: #a83c16;
+    --color-heat-5: #ff6a33;
+    --color-positive: #4cc38a;
+    --color-positive-tint: #12291e;
+    --color-warning: #f0b04a;
+    --color-warning-tint: #2e2310;
+    --color-negative: #ff7a85;
+    --color-negative-tint: #33161b;
+  }
+}
+
+:root[data-theme="dark"] {
+  --color-canvas: #0f1115;
+  --color-surface: #171a20;
+  --color-border: #2a2e36;
+  --color-text-primary: #eceef1;
+  --color-text-secondary: #a3a9b4;
+  --color-action-primary: #ff6a33;
+  --color-action-text: #ff8a5c;
+  --color-heat-1: #2a1c16;
+  --color-heat-2: #4a2516;
+  --color-heat-3: #7a3415;
+  --color-heat-4: #a83c16;
+  --color-heat-5: #ff6a33;
+  --color-positive: #4cc38a;
+  --color-positive-tint: #12291e;
+  --color-warning: #f0b04a;
+  --color-warning-tint: #2e2310;
+  --color-negative: #ff7a85;
+  --color-negative-tint: #33161b;
+}

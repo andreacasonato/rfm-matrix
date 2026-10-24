@@ -1,0 +1,30 @@
+@import "tailwindcss";
+@import "./tokens.css";
+
+@font-face {
+  font-family: "Geist";
+  src: url("../fonts/Geist-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: "Geist Mono";
+  src: url("../fonts/GeistMono-Variable.woff2") format("woff2");
+  font-weight: 100 900;
+  font-display: swap;
+}
+
+@layer base {
+  html {
+    color-scheme: light dark;
+  }
+
+  body {
+    @apply bg-canvas font-sans text-sm text-text-primary antialiased;
+  }
+
+  :focus-visible {
+    @apply outline-2 outline-offset-2 outline-action-primary;
+  }
+}
