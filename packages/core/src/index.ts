@@ -42,3 +42,5 @@ export type { Segment, SegmentMap, ValidationResult } from './segments';
 export { applySegments, cellIndex, defaultSegmentMap, segmentFor, validateMap } from './segments';
 export type { SegmentSummary, SegmentsSummary } from './summary';
 export { summariseSegments } from './summary';
+export type { DateOrder, DecimalSeparator, DetectedDateOrder } from './values';
+export { detectDateOrder, detectDecimal, parseAmount, parseDate } from './values';
