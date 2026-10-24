@@ -17,6 +17,7 @@ consequences, governance, notes.
 | [0009](0009-pages-deploy.md) | Manually triggered GitHub Pages deploy | Accepted |
 | [0010](0010-percentiles-and-days.md) | Percentile method and day counting | Accepted |
 | [0011](0011-ui-dependencies-and-csv-only.md) | UI dependencies, CSV-only import, no router | Accepted |
+| [0012](0012-column-mapping-rules.md) | Column mapping: amounts, dates, customer keys, presets | Accepted |
 
 ## Template
 
