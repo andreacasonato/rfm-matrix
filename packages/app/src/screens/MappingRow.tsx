@@ -21,7 +21,7 @@ type Props = {
 };
 
 const select =
-  'h-10 w-full rounded-control border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
+  'h-10 w-full rounded-control text-body border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
 
 export function MappingRow({ field, label, need, header, value, samples, read, onChange }: Props) {
   const id = `map-${field}`;
@@ -46,7 +46,7 @@ export function MappingRow({ field, label, need, header, value, samples, read, o
           onChange(event.target.value === '' ? undefined : Number(event.target.value))
         }
       >
-        <option value="">{need === 'optional' ? 'Not in this file' : 'Choose a column'}</option>
+        <option value="">{need === 'required' ? 'Choose a column' : 'Not in this file'}</option>
         {header.map((name, index) => (
           // biome-ignore lint/suspicious/noArrayIndexKey: columns are identified by position
           <option key={index} value={index}>

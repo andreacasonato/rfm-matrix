@@ -41,7 +41,7 @@ describe('MapScreen', () => {
     expect(field('Amount')).toHaveProperty('value', '4');
     const amount = screen.getByTestId('field-amount');
     expect(amount.textContent).toContain('30.00');
-    expect(amount.textContent).toContain('30.00 → 30');
+    expect(amount.textContent).toContain('30.00 → 30.00');
     expect(screen.getByTestId('field-orderedAt').textContent).toContain('3 April 2026');
   });
 
@@ -88,6 +88,23 @@ describe('MapScreen', () => {
     expect(screen.getByTestId('field-amount').textContent).toContain('cannot be read');
     fireEvent.click(screen.getByRole('button', { name: 'Confirm columns' }));
     expect(onConfirm.mock.calls[0]?.[0].read.decimal).toBe('.');
+  });
+
+  it('detects the decimal separator again when the amount column is picked by hand', () => {
+    renderMap(
+      preview(['Customer ID', 'Order No', 'Date', 'Paid'], [['7', 'A1', '2026-04-03', '12,50']]),
+    );
+    expect(field('Amount')).toHaveProperty('value', '');
+    fireEvent.change(field('Amount'), { target: { value: '3' } });
+    expect(field('Decimal separator')).toHaveProperty('value', ',');
+    expect(screen.getByTestId('field-amount').textContent).toContain('12,50 → 12.50');
+  });
+
+  it('offers "Not in this file" for the customer ID when the email is used', () => {
+    renderMap(shopify);
+    expect(within(field('Customer ID')).getByRole('option', { selected: true }).textContent).toBe(
+      'Not in this file',
+    );
   });
 
   it('re-guesses the columns when another preset is chosen, and says WooCommerce is unverified', () => {

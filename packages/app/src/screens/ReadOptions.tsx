@@ -18,8 +18,9 @@ type Props = {
 };
 
 const select =
-  'h-10 rounded-control border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control text-body border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
 const choice = 'flex items-start gap-2';
+const radio = 'mt-1 accent-action-primary';
 
 export function ReadOptions(props: Props) {
   const { ambiguousExample, dateOrder, decimal, amountLevel } = props;
@@ -40,6 +41,7 @@ export function ReadOptions(props: Props) {
             return (
               <label key={order} className={choice}>
                 <input
+                  className={radio}
                   type="radio"
                   name="date-order"
                   checked={dateOrder === order}
@@ -66,6 +68,7 @@ export function ReadOptions(props: Props) {
         <legend className="mb-1 font-semibold">How are amounts written?</legend>
         <label className={choice}>
           <input
+            className={radio}
             type="radio"
             name="amount-level"
             checked={amountLevel === 'order'}
@@ -78,6 +81,7 @@ export function ReadOptions(props: Props) {
         </label>
         <label className={choice}>
           <input
+            className={radio}
             type="radio"
             name="amount-level"
             checked={amountLevel === 'line'}

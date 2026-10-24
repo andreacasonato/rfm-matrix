@@ -5,6 +5,7 @@ import {
   type DateOrder,
   type DecimalSeparator,
   detectDateOrder,
+  detectDecimal,
   type Field,
   fieldLabels,
   guessMapping,
@@ -41,7 +42,7 @@ const fields: [Field, Need][] = [
 ];
 
 const select =
-  'h-10 rounded-control border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control text-body border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
 
 function samplesOf(preview: CsvPreview, index: number | undefined): string[] {
   if (index === undefined) return [];
@@ -53,7 +54,7 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
   const [initial] = useState(() => initialPlan(preview));
   const [preset, setPreset] = useState<PresetId>(initial.preset);
   const [mapping, setMapping] = useState<ColumnMapping>(initial.plan.mapping);
-  const [decimal, setDecimal] = useState<DecimalSeparator>(initial.plan.read.decimal);
+  const [chosenDecimal, setChosenDecimal] = useState<DecimalSeparator | undefined>();
   const [chosenOrder, setChosenOrder] = useState<DateOrder | undefined>();
   const [amountLevel, setAmountLevel] = useState<AmountLevel>('order');
 
@@ -62,6 +63,8 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
   const ambiguous = detected === 'ambiguous';
   const dateOrder: DateOrder | undefined =
     chosenOrder ?? (detected === 'mdy' ? 'mdy' : ambiguous ? undefined : 'dmy');
+  // Detected from the amount column in use, until the user picks one.
+  const decimal = chosenDecimal ?? detectDecimal(samplesOf(preview, mapping.amount));
   const problems = validateMapping(mapping, preview.header);
   const ready = problems.length === 0 && dateOrder !== undefined;
 
@@ -144,7 +147,7 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
         decimal={decimal}
         amountLevel={amountLevel}
         onDateOrder={setChosenOrder}
-        onDecimal={setDecimal}
+        onDecimal={setChosenDecimal}
         onAmountLevel={setAmountLevel}
       />
       {problems.length > 0 && (

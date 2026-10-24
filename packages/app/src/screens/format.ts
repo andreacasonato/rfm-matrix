@@ -11,4 +11,4 @@ export const formatDay = (utcMs: number) =>
       });
 
 export const formatAmount = (value: number) =>
-  value.toLocaleString('en-US', { maximumFractionDigits: 2 });
+  value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
