@@ -34,3 +34,7 @@ export type { Aggregator, CustomerAggregate } from './aggregate';
 export { aggregate, createAggregator } from './aggregate';
 export type { ColumnIndexes } from './order-row';
 export { toOrderRow } from './order-row';
+export type { Breakpoints } from './percentile';
+export { percentileInc, quintileBreakpoints } from './percentile';
+export type { BinSizes, ScoredCustomer, ScoreResult } from './score';
+export { NotEnoughCustomersError, score } from './score';
