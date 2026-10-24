@@ -1,5 +1,5 @@
 // URLs that may appear in the build because they are text, never fetched. Each entry needs
-// the maintainer's review; keep prefixes as narrow as possible.
+// the maintainer's review. An entry ending in "/" covers that path; others match exactly.
 import type { AllowedUrl } from './hosts.ts';
 
 export const allowedUrls: AllowedUrl[] = [
@@ -16,6 +16,14 @@ export const allowedUrls: AllowedUrl[] = [
   {
     prefix: 'https://github.com/mholt/PapaParse',
     reason: 'Project link in the Papa Parse @license comment, which MIT requires us to keep',
+  },
+  {
+    prefix: 'https://tailwindcss.com',
+    reason: 'Project link in the Tailwind CSS license banner comment (MIT)',
+  },
+  {
+    prefix: 'http://scripts.sil.org/OFL',
+    reason: 'License URL inside the Geist font license text, OFL.txt (ADR-0005)',
   },
   {
     prefix: 'https://react.dev/errors/',
