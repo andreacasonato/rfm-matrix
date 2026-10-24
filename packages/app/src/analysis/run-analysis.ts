@@ -9,12 +9,12 @@ import {
   toOrderRow,
 } from '@rfm-matrix/core';
 import { streamCsv } from '@rfm-matrix/io';
-import type { ColumnNames, WorkerMessage } from './protocol';
+import type { ColumnNames, CsvFormat, WorkerMessage } from './protocol';
 
 const progressEveryMs = 250;
 const progressEveryRows = 50_000;
 
-type Options = { now?: () => number; chunkSize?: number };
+type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
 function findColumns(header: string[], names: ColumnNames): ColumnIndexes {
   const indexOf = (name: string) => {
@@ -34,7 +34,7 @@ export async function runAnalysis(
   source: Blob | string,
   names: ColumnNames,
   post: (message: WorkerMessage) => void,
-  { now = () => performance.now(), chunkSize }: Options = {},
+  { now = () => performance.now(), chunkSize, format = {} }: Options = {},
 ): Promise<void> {
   const started = now();
   const aggregator = createAggregator();
@@ -72,7 +72,7 @@ export async function runAnalysis(
           }
         },
       },
-      chunkSize === undefined ? {} : { chunkSize },
+      { ...format, ...(chunkSize === undefined ? {} : { chunkSize }) },
     );
 
     const customers = aggregator.customers();

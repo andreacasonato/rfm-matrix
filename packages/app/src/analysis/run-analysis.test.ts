@@ -58,6 +58,15 @@ describe('runAnalysis', () => {
     expect(messages).toEqual([{ type: 'error', message: 'Missing column: Created at' }]);
   });
 
+  it('reads the file with the format chosen on the upload screen', async () => {
+    // A forced semicolon turns each comma-separated line into one cell, so no column matches.
+    const messages: WorkerMessage[] = [];
+    await runAnalysis(new Blob([csv]), columns, (m) => messages.push(m), {
+      format: { delimiter: ';', encoding: 'utf-8' },
+    });
+    expect(messages.at(-1)).toEqual({ type: 'error', message: 'Missing column: Email' });
+  });
+
   it('blocks scoring with fewer than 5 customers', async () => {
     const few = [header, '#1,a@example.test,2026-01-01T10:00:00Z,30.00,Mug'].join('\n');
     expect((await run(few)).at(-1)).toEqual({

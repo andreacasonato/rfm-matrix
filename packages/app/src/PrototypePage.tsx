@@ -2,7 +2,7 @@
 // Unstyled on purpose; the real screens replace it in M3.
 import { useRef, useState } from 'react';
 import type { DoneMessage, ProgressMessage } from './analysis/protocol';
-import { type AnalysisHandle, startAnalysis } from './analysis/start-analysis';
+import { type JobHandle, startAnalysis } from './analysis/worker-client';
 import { SegmentList } from './SegmentList';
 
 const shopifyColumns = {
@@ -29,14 +29,14 @@ async function loadSample(): Promise<Blob> {
 
 export function PrototypePage() {
   const [state, setState] = useState<State>({ status: 'idle' });
-  const handle = useRef<AnalysisHandle | null>(null);
+  const handle = useRef<JobHandle<DoneMessage> | null>(null);
   const running = state.status === 'running';
 
   function analyse(file: Blob) {
     handle.current?.cancel();
     const started = performance.now();
     setState({ status: 'running' });
-    const current = startAnalysis(file, shopifyColumns, (progress) =>
+    const current = startAnalysis(file, shopifyColumns, {}, (progress) =>
       setState({ status: 'running', progress }),
     );
     handle.current = current;
