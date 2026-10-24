@@ -1,4 +1,5 @@
 // Messages between the page and the analysis worker (ADR-0003).
+import type { SegmentsSummary } from '@rfm-matrix/core';
 
 export type ColumnNames = { customer: string; orderId: string; orderedAt: string; amount: string };
 
@@ -20,6 +21,9 @@ export type DoneMessage = {
   orders: number;
   monetaryTotal: number;
   problems: { row: number; message: string }[];
+  /** UTC calendar date, YYYY-MM-DD (ADR-0010). */
+  analysisDate: string;
+  segments: SegmentsSummary;
   elapsedMs: number;
 };
 
