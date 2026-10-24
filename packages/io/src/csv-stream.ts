@@ -1,33 +1,48 @@
 // Streams a CSV file in chunks so it is never held in memory whole (TRD §4, ADR-0003).
-// The delimiter is detected from the first chunk.
+// The delimiter is detected from the first chunk unless the caller gives one.
 import Papa from 'papaparse';
+import { DecodedBlobStream, type TextEncodingName } from './decoded-stream';
 
 export type CsvProblem = { row: number; message: string };
-export type CsvSummary = { rowsRead: number; problems: CsvProblem[] };
+export type CsvSummary = { rowsRead: number; problems: CsvProblem[]; delimiter: string };
+export type CsvOptions = { chunkSize?: number; encoding?: TextEncodingName; delimiter?: string };
 export type CsvHandlers = {
   onHeader(cells: string[]): void;
   onRows(rows: string[][], bytesRead: number): void;
 };
 
 const maxProblems = 100;
+const defaultSliceBytes = 4 * 1024 * 1024;
 
 export function streamCsv(
   source: Blob | string,
   handlers: CsvHandlers,
-  options: { chunkSize?: number } = {},
+  options: CsvOptions = {},
 ): Promise<CsvSummary> {
   return new Promise((resolve, reject) => {
     let headerSeen = false;
     let rowsRead = 0;
+    let delimiter = options.delimiter ?? '';
     let failure: unknown;
     const problems: CsvProblem[] = [];
+    const stream =
+      typeof source === 'string'
+        ? undefined
+        : new DecodedBlobStream(
+            source,
+            options.encoding ?? 'utf-8',
+            options.chunkSize ?? defaultSliceBytes,
+          );
 
-    Papa.parse<string[]>(source as File, {
+    // Papa's types do not describe its Node-stream input, which DecodedBlobStream imitates.
+    Papa.parse<string[]>((stream ?? source) as unknown as File, {
       header: false,
       skipEmptyLines: 'greedy',
-      chunkSize: options.chunkSize ?? 4 * 1024 * 1024,
+      delimiter: options.delimiter ?? '',
+      ...(stream ? {} : { chunkSize: options.chunkSize ?? defaultSliceBytes }),
       chunk(results, parser) {
         try {
+          if (!delimiter) delimiter = results.meta.delimiter;
           const rows = results.data;
           let offset = 0;
           if (!headerSeen && rows.length > 0) {
@@ -45,17 +60,19 @@ export function streamCsv(
           }
           const dataRows = offset === 0 ? rows : rows.slice(offset);
           rowsRead += dataRows.length;
-          handlers.onRows(dataRows, results.meta.cursor);
+          handlers.onRows(dataRows, stream ? stream.bytesRead : results.meta.cursor);
         } catch (error) {
           failure = error;
+          stream?.stop();
           parser.abort();
         }
       },
       complete() {
         if (failure !== undefined) reject(failure);
-        else resolve({ rowsRead, problems });
+        else resolve({ rowsRead, problems, delimiter });
       },
       error(error: Error) {
+        stream?.stop();
         reject(error);
       },
     });

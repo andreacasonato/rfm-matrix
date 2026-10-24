@@ -27,7 +27,7 @@ describe('streamCsv', () => {
       ['1', '2'],
       ['3', '4'],
     ]);
-    expect(summary).toEqual({ rowsRead: 2, problems: [] });
+    expect(summary).toEqual({ rowsRead: 2, problems: [], delimiter: ',' });
   });
 
   it('streams a file in many chunks without losing or splitting rows', async () => {
