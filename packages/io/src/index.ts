@@ -2,3 +2,7 @@
 export type { CsvHandlers, CsvOptions, CsvProblem, CsvSummary } from './csv-stream';
 export { streamCsv } from './csv-stream';
 export type { TextEncodingName } from './decoded-stream';
+export type { CsvPreview, PreviewOptions, UnreadableKind } from './preview';
+export { previewCsv, UnreadableFileError } from './preview';
+export type { Sniff } from './sniff';
+export { sniffBytes, sniffFile } from './sniff';
