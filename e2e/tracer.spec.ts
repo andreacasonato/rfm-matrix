@@ -35,12 +35,15 @@ test.describe('tracer bullet (M2)', () => {
 
   test('a file with fewer than 5 customers explains why it cannot be scored', async ({ page }) => {
     await page.goto('/');
+    await page.getByRole('button', { name: 'Upload orders' }).click();
     const csv = 'Name,Email,Created at,Total\n#1,a@example.test,2026-01-01T10:00:00Z,10.00\n';
     await page.locator('input[type=file]').setInputFiles({
       name: 'tiny.csv',
       mimeType: 'text/csv',
       buffer: Buffer.from(csv),
     });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.getByRole('alert')).toContainText('at least 5 customers');
   });
 });

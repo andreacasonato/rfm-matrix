@@ -1,6 +1,7 @@
 // Usage: node tools/bench/run.ts [--rows 1000000] [--runs 20]
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
-// Timed from file picked to segment counts ready: parse, aggregate, score and segment.
+// Drives the real screens. Timed from Run analysis to segment counts ready (parse, aggregate,
+// score, segment); the upload preview's own read is reported separately.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 import { resolve } from 'node:path';
@@ -8,6 +9,7 @@ import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 import { checkCancel } from './cancel-check.ts';
 import { sampleMemory } from './memory.ts';
+import { previewFile, runAnalysis } from './navigate.ts';
 import { serve } from './serve.ts';
 
 const { values } = parseArgs({
@@ -29,7 +31,12 @@ const browser = await chromium.launch();
 const percentile = (sorted: number[], p: number) =>
   sorted[Math.max(0, Math.ceil((p / 100) * sorted.length) - 1)] ?? Number.NaN;
 
-const results: { wallMs: number; longestBlockMs: number; peakMemoryBytes: number }[] = [];
+const results: {
+  wallMs: number;
+  previewMs: number;
+  longestBlockMs: number;
+  peakMemoryBytes: number;
+}[] = [];
 const mismatches: string[] = [];
 let cancelFailure: string | undefined;
 
@@ -52,7 +59,8 @@ try {
       () => (window as unknown as { longestTaskMs: number }).longestTaskMs,
     );
     const stopSampling = sampleMemory(process.pid);
-    await page.setInputFiles('input[type=file]', csvPath);
+    const previewMs = await previewFile(page, csvPath);
+    await runAnalysis(page);
     const outcome = page.locator('output[data-status=done], [role=alert]');
     await outcome.waitFor({ timeout: 180_000 });
     const alert = await page.locator('[role=alert]').count();
@@ -91,7 +99,7 @@ try {
         `run ${run}: total ${result.monetaryTotal}, expected ${expected.totalCents / 100}`,
       );
     }
-    results.push({ wallMs, longestBlockMs, peakMemoryBytes });
+    results.push({ wallMs, previewMs, longestBlockMs, peakMemoryBytes });
     console.log(
       `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms`,
     );
@@ -114,6 +122,13 @@ const summary = {
   p50Ms: Math.round(percentile(sorted, 50)),
   p95Ms: Math.round(percentile(sorted, 95)),
   rowsPerSecondAtP50: Math.round(rows / (percentile(sorted, 50) / 1000)),
+  // Reading the file once for the upload preview (row count), before the analysis reads it.
+  previewP50Ms: Math.round(
+    percentile(
+      results.map((r) => r.previewMs).sort((a, b) => a - b),
+      50,
+    ),
+  ),
   longestMainThreadBlockMs: Math.round(Math.max(...results.map((r) => r.longestBlockMs))),
   // Resident memory of all Chromium processes, sampled every 250 ms during each run.
   peakBrowserMemoryMB: Math.round(Math.max(...results.map((r) => r.peakMemoryBytes)) / 2 ** 20),

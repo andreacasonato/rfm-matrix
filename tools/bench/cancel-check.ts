@@ -1,5 +1,6 @@
 // Starts an analysis, clicks Cancel, and checks the worker is gone and no result arrives.
 import type { Browser } from '@playwright/test';
+import { previewFile, runAnalysis } from './navigate.ts';
 
 export async function checkCancel(
   browser: Browser,
@@ -10,7 +11,8 @@ export async function checkCancel(
   try {
     const page = await context.newPage();
     await page.goto(url);
-    await page.setInputFiles('input[type=file]', csvPath);
+    await previewFile(page, csvPath);
+    await runAnalysis(page);
     const cancel = page.getByRole('button', { name: 'Cancel' });
     await cancel.waitFor({ timeout: 10_000 });
     await cancel.click();
@@ -20,8 +22,8 @@ export async function checkCancel(
       return 'Cancel: a result appeared after cancelling';
     }
     if (page.workers().length > 0) return 'Cancel: the worker is still running';
-    if (await page.locator('input[type=file]').isDisabled()) {
-      return 'Cancel: the file picker stayed disabled';
+    if ((await page.getByText('Analysis cancelled').count()) === 0) {
+      return 'Cancel: the page did not say the analysis was cancelled';
     }
     return undefined;
   } finally {
