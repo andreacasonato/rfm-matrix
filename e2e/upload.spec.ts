@@ -33,7 +33,7 @@ test.describe('upload and preview (S1)', () => {
     await expect(page.getByLabel('Text encoding')).toHaveValue('utf-8');
 
     await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByRole('button', { name: 'Run analysis' }).click();
+    await page.getByRole('button', { name: 'Confirm columns' }).click();
     await expect(page.locator('td[data-total-customers]')).toHaveAttribute(
       'data-total-customers',
       '598',

@@ -1,4 +1,4 @@
-// Drives the app's real screens: Start → Upload orders → preview → Continue → Run analysis.
+// Drives the app's real screens: Start → Upload orders → preview → Continue → Confirm columns.
 import type { Page } from '@playwright/test';
 
 const longWait = { timeout: 180_000 };
@@ -14,5 +14,5 @@ export async function previewFile(page: Page, csvPath: string): Promise<number> 
 
 export async function runAnalysis(page: Page): Promise<void> {
   await page.getByRole('button', { name: 'Continue' }).click();
-  await page.getByRole('button', { name: 'Run analysis' }).click();
+  await page.getByRole('button', { name: 'Confirm columns' }).click();
 }

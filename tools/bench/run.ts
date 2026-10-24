@@ -1,6 +1,6 @@
 // Usage: node tools/bench/run.ts [--rows 1000000] [--runs 20]
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
-// Drives the real screens. Timed from Run analysis to segment counts ready (parse, aggregate,
+// Drives the real screens. Timed from Confirm columns to segment counts ready (parse, aggregate,
 // score, segment); the upload preview's own read is reported separately.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';

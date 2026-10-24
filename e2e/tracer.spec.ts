@@ -43,7 +43,7 @@ test.describe('tracer bullet (M2)', () => {
       buffer: Buffer.from(csv),
     });
     await page.getByRole('button', { name: 'Continue' }).click();
-    await page.getByRole('button', { name: 'Run analysis' }).click();
+    await page.getByRole('button', { name: 'Confirm columns' }).click();
     await expect(page.getByRole('alert')).toContainText('at least 5 customers');
   });
 });

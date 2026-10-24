@@ -4,7 +4,7 @@ import { useEffect, useState } from 'react';
 import { startPreview } from './analysis/worker-client';
 import { Page } from './components/Page';
 import { initialPlan } from './mapping/initial-plan';
-import { MapPlaceholder } from './screens/MapPlaceholder';
+import { MapScreen } from './screens/MapScreen';
 import { type AnalysisInput, ResultsScreen } from './screens/ResultsScreen';
 import { StartScreen } from './screens/StartScreen';
 import { UploadScreen } from './screens/UploadScreen';
@@ -53,21 +53,17 @@ export function App() {
         />
       )}
       {screen.name === 'map' && (
-        <MapPlaceholder
+        <MapScreen
           fileName={screen.file.name}
           preview={screen.preview}
           onBack={() => setScreen({ name: 'upload' })}
-          onRun={() => {
+          onConfirm={(plan) => {
             const { file, preview } = screen;
+            const format = { encoding: preview.encoding, delimiter: preview.delimiter };
             setScreen({
               name: 'results',
               label: file.name,
-              load: () =>
-                Promise.resolve({
-                  source: file,
-                  plan: initialPlan(preview).plan,
-                  format: { encoding: preview.encoding, delimiter: preview.delimiter },
-                }),
+              load: () => Promise.resolve({ source: file, plan, format }),
             });
           }}
         />
