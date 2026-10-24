@@ -32,6 +32,18 @@
   --font-sans: "Geist", ui-sans-serif, system-ui, sans-serif;
   --font-mono: "Geist Mono", ui-monospace, monospace;
 
+  /* Type scale (DESIGN_BRIEF "Scales"): size / line height. */
+  --text-title: 28px;
+  --text-title--line-height: 36px;
+  --text-section: 18px;
+  --text-section--line-height: 26px;
+  --text-body: 14px;
+  --text-body--line-height: 22px;
+  --text-small: 12px;
+  --text-small--line-height: 18px;
+  --text-number: 13px;
+  --text-number--line-height: 20px;
+
   --radius-control: 8px;
   --radius-panel: 12px;
   --radius-cell: 6px;
