@@ -83,10 +83,9 @@ export function ResultsScreen({
         >
           <p>
             Running analysis…{' '}
-            <span className="font-mono text-number">{count(state.progress?.rowsRead ?? 0)}</span>{' '}
-            rows,{' '}
-            <span className="font-mono text-number">{count(state.progress?.customers ?? 0)}</span>{' '}
-            customers found
+            <span className="tabular-nums">{count(state.progress?.rowsRead ?? 0)}</span> rows,{' '}
+            <span className="tabular-nums">{count(state.progress?.customers ?? 0)}</span> customers
+            found
           </p>
           <Button onClick={cancel}>Cancel</Button>
         </section>

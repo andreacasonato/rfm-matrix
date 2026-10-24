@@ -79,7 +79,7 @@ export function UploadScreen({ onBack, onContinue, previewFile = startPreview }:
         >
           <p>
             Reading <span className="font-semibold">{state.file.name}</span>…{' '}
-            <span className="font-mono text-number">{count(state.rowsRead)}</span> rows so far
+            <span className="tabular-nums">{count(state.rowsRead)}</span> rows so far
           </p>
           <Button onClick={cancel}>Cancel</Button>
         </section>
@@ -128,7 +128,7 @@ function ReadyView({ file, preview, onFormat, onOther, onContinue }: ReadyProps)
         <div className="flex flex-wrap items-baseline justify-between gap-2">
           <p className="text-section font-semibold">{file.name}</p>
           <p className="text-text-secondary">
-            <span className="font-mono text-number">{count(preview.rowCount)}</span> rows,{' '}
+            <span className="tabular-nums">{count(preview.rowCount)}</span> rows,{' '}
             {preview.header.length} columns
           </p>
         </div>
