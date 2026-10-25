@@ -49,6 +49,8 @@ export {
   orderCounts,
   statusCounts,
 } from './cleaning';
+export type { GridCell } from './grid';
+export { gridCells } from './grid';
 export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';
 export type { AmountLevel, CustomerAggregate, OrderBookResult } from './orders';
