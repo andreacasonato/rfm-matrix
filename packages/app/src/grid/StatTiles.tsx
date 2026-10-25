@@ -1,9 +1,15 @@
 // Four summary numbers above the grid (DESIGN_BRIEF): calm, no shadows, at most four tiles.
-import { formatDay } from '../screens/format';
 
 type Props = { customers: number; revenue: number; repeatCustomers: number; analysisDate: string };
 
 const whole = (n: number) => Math.round(n).toLocaleString('en-US');
+const shortDay = (iso: string) =>
+  new Date(`${iso}T00:00:00Z`).toLocaleDateString('en-GB', {
+    day: 'numeric',
+    month: 'short',
+    year: 'numeric',
+    timeZone: 'UTC',
+  });
 
 export function StatTiles({ customers, revenue, repeatCustomers, analysisDate }: Props) {
   const repeat = customers === 0 ? 0 : Math.round((repeatCustomers / customers) * 100);
@@ -11,7 +17,7 @@ export function StatTiles({ customers, revenue, repeatCustomers, analysisDate }:
     ['Customers', whole(customers)],
     ['Revenue', whole(revenue)],
     ['Repeat customers', `${repeat}%`],
-    ['Analysed', formatDay(Date.parse(`${analysisDate}T00:00:00Z`))],
+    ['Analysed', shortDay(analysisDate)],
   ];
   return (
     <ul aria-label="Summary" className="grid grid-cols-2 gap-3 lg:grid-cols-4">

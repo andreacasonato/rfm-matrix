@@ -69,6 +69,16 @@ describe('Heatmap', () => {
     expect(cells[24]?.getAttribute('aria-label')).toBe("Can't lose them, R1 F5: 24 customers");
   });
 
+  it('outlines segments: a dark edge where the segment changes and around the grid', () => {
+    render(<Heatmap cells={sampleCells()} segments={defaultSegmentMap.segments} />);
+    const cells = screen.getAllByRole('cell');
+    // R5 F4 (Champions): left neighbour Loyal customers, right neighbour Champions, top edge.
+    const champions = cells[3]?.className ?? '';
+    expect(champions).toContain('border-l-text-primary');
+    expect(champions).toContain('border-r-surface');
+    expect(champions).toContain('border-t-text-primary');
+  });
+
   it('labels each segment once, on its first cell, so colour is never the only cue', () => {
     render(<Heatmap cells={sampleCells()} segments={defaultSegmentMap.segments} />);
     expect(screen.getAllByText('Champions')).toHaveLength(1);
@@ -90,7 +100,7 @@ describe('StatTiles', () => {
     expect(text).toContain('Customers540');
     expect(text).toContain('Revenue144,557');
     expect(text).toContain('Repeat customers47%');
-    expect(text).toContain('Analysed27 September 2026');
+    expect(text).toContain('Analysed27 Sept 2026');
   });
 });
 
@@ -116,5 +126,14 @@ describe('SegmentPanel', () => {
     expect(within(row).getByRole('meter').getAttribute('aria-valuenow')).toBe(
       String(((7 * 10) / 550) * 100),
     );
+  });
+
+  it('scales revenue bars to the largest segment so small shares stay visible', () => {
+    render(<SegmentPanel summary={summary} />);
+    const widths = screen
+      .getAllByRole('meter')
+      .map((m) => (m.firstElementChild as HTMLElement | null)?.style.width);
+    expect(widths.at(-1)).toBe('100%'); // Lost has the largest share here
+    expect(widths[5]).toBe('50%'); // Need attention: half of Lost's share
   });
 });
