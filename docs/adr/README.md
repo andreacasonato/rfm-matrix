@@ -19,6 +19,7 @@ consequences, governance, notes.
 | [0011](0011-ui-dependencies-and-csv-only.md) | UI dependencies, CSV-only import, no router | Accepted |
 | [0012](0012-column-mapping-rules.md) | Column mapping: amounts, dates, customer keys, presets | Accepted |
 | [0013](0013-cleaning-and-refunds.md) | Cleaning rules, refunds, net amounts, analysis window | Accepted |
+| [0014](0014-export-and-segment-texts.md) | Safe CSV export and the default segment texts | Accepted |
 
 ## Template
 
