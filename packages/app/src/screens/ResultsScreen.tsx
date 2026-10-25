@@ -52,7 +52,9 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
               status: 'done',
               result,
               wallMs: performance.now() - started,
-              hasEmail: plan.mapping.email !== undefined,
+              // The list shows an Email column only when it differs from the customer key; the
+              // export keeps it whenever email is mapped, since email tools look for it.
+              hasEmail: plan.mapping.email !== undefined && plan.mapping.customerId !== undefined,
             }),
           (error: Error) => {
             // Cancel rejects the job too; the cancel button has already updated the screen.
