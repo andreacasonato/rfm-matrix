@@ -4,8 +4,7 @@ import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../a
 import { type JobHandle, startAnalysis } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
-import { SegmentList } from '../SegmentList';
-import { describeScoring } from './describe-scoring';
+import { GridPage } from '../grid/GridPage';
 
 type Props = {
   label: string;
@@ -24,27 +23,6 @@ type State =
   | { status: 'error'; message: string };
 
 const count = (n: number) => n.toLocaleString('en-US');
-
-// Why some orders and customers are not in the results (ADR-0013).
-function LeftOut({ counts }: { counts: DoneMessage['cleaning'] }) {
-  const parts = [
-    [counts.status, 'by status'],
-    [counts.afterAnalysisDate, 'after the analysis date'],
-    [counts.beforeWindow, 'before the window'],
-    [counts.withoutDate, 'without a date'],
-  ]
-    .filter(([n]) => Number(n) > 0)
-    .map(([n, why]) => `${count(Number(n))} ${why}`);
-  if (parts.length === 0 && counts.customersWithoutOrders === 0) return null;
-  return (
-    <p className="text-text-secondary">
-      {parts.length > 0 && `Orders left out: ${parts.join(', ')}. `}
-      {counts.refundsApplied > 0 && `${count(counts.refundsApplied)} refunds subtracted. `}
-      {counts.customersWithoutOrders > 0 &&
-        `${count(counts.customersWithoutOrders)} customers had no order left to score.`}
-    </p>
-  );
-}
 
 const isCancel = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
 
@@ -122,25 +100,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
           <p>{state.message}</p>
         </Notice>
       )}
-      {state.status === 'done' && (
-        <>
-          <output
-            data-status="done"
-            data-wall-ms={state.wallMs}
-            data-result={JSON.stringify(state.result)}
-            className="text-text-secondary"
-          >
-            {count(state.result.rowsRead)} rows read ({count(state.result.invalidRows)} unusable),{' '}
-            {count(state.result.customers)} customers, {count(state.result.orders)} orders, in{' '}
-            {(state.wallMs / 1000).toFixed(2)} s.
-          </output>
-          <LeftOut counts={state.result.cleaning} />
-          <p className="text-text-secondary">
-            Analysed as of {state.result.analysisDate}. {describeScoring(state.result.scoring)}
-          </p>
-          <SegmentList summary={state.result.segments} />
-        </>
-      )}
+      {state.status === 'done' && <GridPage result={state.result} wallMs={state.wallMs} />}
     </>
   );
 }

@@ -20,7 +20,7 @@ test.describe('tracer bullet (M2)', () => {
     await page.getByRole('button', { name: 'Try sample data' }).click();
     await expect(page.locator('output[data-status=done]')).toBeVisible();
 
-    const rows = page.locator('tbody tr');
+    const rows = page.locator('tr[data-segment]');
     await expect(rows).toHaveCount(11);
     const counts = await page
       .locator('td[data-customers]')
