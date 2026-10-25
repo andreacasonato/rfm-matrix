@@ -1,6 +1,15 @@
 // Column-mapping presets as data (TRD §5, ADR-0012) and checks on a mapping.
 
-export type Field = 'customerId' | 'email' | 'orderId' | 'orderedAt' | 'amount' | 'status';
+export type Field =
+  | 'customerId'
+  | 'email'
+  | 'orderId'
+  | 'orderedAt'
+  | 'amount'
+  | 'status'
+  | 'refunded'
+  | 'tax'
+  | 'shipping';
 /** Column index in the file's header for each mapped field. */
 export type ColumnMapping = Partial<Record<Field, number>>;
 export type PresetId = 'shopify' | 'woocommerce' | 'other';
@@ -19,10 +28,23 @@ export const fieldLabels: Record<Field, string> = {
   orderedAt: 'Order date',
   amount: 'Amount',
   status: 'Status',
+  refunded: 'Refunded amount',
+  tax: 'Tax',
+  shipping: 'Shipping',
 };
 
 // Guessing order: required fields first, so they get first pick of the columns.
-const guessOrder: Field[] = ['orderId', 'orderedAt', 'amount', 'email', 'customerId', 'status'];
+const guessOrder: Field[] = [
+  'orderId',
+  'orderedAt',
+  'amount',
+  'email',
+  'customerId',
+  'status',
+  'refunded',
+  'tax',
+  'shipping',
+];
 
 const common: Preset['columns'] = {
   customerId: [
@@ -76,6 +98,9 @@ const common: Preset['columns'] = {
     'sales',
   ],
   status: ['status', 'order status', 'financial status', 'payment status'],
+  refunded: ['refunded amount', 'refunded', 'refund amount', 'total refunded', 'refunds'],
+  tax: ['tax', 'taxes', 'tax amount', 'total tax', 'vat'],
+  shipping: ['shipping', 'shipping amount', 'shipping cost', 'shipping total', 'delivery cost'],
 };
 
 export const presets: Preset[] = [
@@ -90,6 +115,9 @@ export const presets: Preset[] = [
       orderedAt: ['Created at'],
       amount: ['Total'],
       status: ['Financial Status'],
+      refunded: ['Refunded Amount'],
+      tax: ['Taxes'],
+      shipping: ['Shipping'],
     },
   },
   {
@@ -104,6 +132,9 @@ export const presets: Preset[] = [
       orderedAt: ['order_date', 'date_created', 'order date'],
       amount: ['order_total', 'order total amount', 'order total'],
       status: ['status', 'order_status', 'order status'],
+      refunded: ['refunded_total', 'order refund amount'],
+      tax: ['tax_total', 'order total tax amount'],
+      shipping: ['shipping_total', 'order shipping amount'],
     },
   },
   { id: 'other', name: 'Other shop or spreadsheet', verified: false, columns: {} },

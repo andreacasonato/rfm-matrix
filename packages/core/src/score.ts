@@ -1,6 +1,7 @@
 // R, F and M scores from 1 to 5 (TRD §8, ADR-0004, ADR-0010).
-import type { CustomerAggregate } from './aggregate';
+
 import type { CustomerScore, Score } from './index';
+import type { CustomerAggregate } from './orders';
 import { type Breakpoints, quintileBreakpoints } from './percentile';
 
 export type ScoredCustomer = Omit<CustomerScore, 'segmentId'>;

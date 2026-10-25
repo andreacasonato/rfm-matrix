@@ -10,6 +10,10 @@ export type OrderRow = {
   orderedAt?: Date;
   amount?: number;
   status?: string;
+  // Optional order values for refunds and net amounts (ADR-0013).
+  refunded?: number;
+  tax?: number;
+  shipping?: number;
 };
 
 export type ScoringConfig = {
@@ -32,10 +36,22 @@ export type CustomerScore = {
   segmentId: string;
 };
 
-export type { Aggregator, AmountLevel, CustomerAggregate } from './aggregate';
-export { aggregate, createAggregator } from './aggregate';
+export type {
+  CleaningCounts,
+  CleaningRules,
+  OrderCounts,
+  OrderProfile,
+} from './cleaning';
+export {
+  defaultExcludedStatuses,
+  isExcludedByDefault,
+  normaliseStatus,
+  orderCounts,
+} from './cleaning';
 export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';
+export type { AmountLevel, CustomerAggregate, OrderBookResult } from './orders';
+export { OrderBook } from './orders';
 export type { Breakpoints } from './percentile';
 export { percentileInc, quintileBreakpoints } from './percentile';
 export type { ColumnMapping, Field, Preset, PresetId } from './presets';

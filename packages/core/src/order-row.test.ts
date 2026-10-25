@@ -47,6 +47,14 @@ describe('toOrderRow', () => {
     expect(row).toMatchObject({ amount: 1234.5, orderedAt: new Date(Date.UTC(2026, 0, 5)) });
   });
 
+  it('reads refunded, tax and shipping values when mapped', () => {
+    const extra = { ...mapping, refunded: 6, tax: 7, shipping: 8 };
+    const cells = ['1', '', '#1', '2026-01-05', '100', '', '10.00', '20', ''];
+    expect(toOrderRow(cells, extra, settings)).toMatchObject({ refunded: 10, tax: 20 });
+    expect(toOrderRow(cells, extra, settings)).not.toHaveProperty('shipping');
+    expect(toOrderRow([...cells.slice(0, 7), 'x', ''], extra, settings)).toBeUndefined();
+  });
+
   it.each([
     ['no customer ID or email', ['', ' ', '#1', '2026-01-05', '1', '']],
     ['no order ID', ['1', '', ' ', '2026-01-05', '1', '']],

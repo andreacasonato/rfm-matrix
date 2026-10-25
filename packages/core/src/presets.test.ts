@@ -43,6 +43,9 @@ describe('presets', () => {
       orderedAt: at(shopify, 'Created at'),
       amount: at(shopify, 'Total'),
       status: at(shopify, 'Financial Status'),
+      refunded: at(shopify, 'Refunded Amount'),
+      tax: at(shopify, 'Taxes'),
+      shipping: at(shopify, 'Shipping'),
     });
   });
 
@@ -54,6 +57,9 @@ describe('presets', () => {
       orderedAt: at(wooSnake, 'order_date'),
       amount: at(wooSnake, 'order_total'),
       status: at(wooSnake, 'status'),
+      refunded: at(wooSnake, 'refunded_total'),
+      tax: at(wooSnake, 'tax_total'),
+      shipping: at(wooSnake, 'shipping_total'),
     });
     expect(guessMapping(wooTitled, 'woocommerce')).toEqual({
       customerId: at(wooTitled, 'Customer User ID'),
@@ -62,6 +68,7 @@ describe('presets', () => {
       orderedAt: at(wooTitled, 'Order Date'),
       amount: at(wooTitled, 'Order Total Amount'),
       status: at(wooTitled, 'Order Status'),
+      shipping: at(wooTitled, 'Order Shipping Amount'),
     });
   });
 

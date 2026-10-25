@@ -1,6 +1,6 @@
 import fc from 'fast-check';
 import { describe, expect, it } from 'vitest';
-import type { CustomerAggregate } from './aggregate';
+import type { CustomerAggregate } from './orders';
 import { NotEnoughCustomersError, score } from './score';
 
 const day = (iso: string) => new Date(`${iso}T15:30:00Z`);

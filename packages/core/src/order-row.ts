@@ -35,5 +35,15 @@ export function toOrderRow(
   if (amount !== null) row.amount = amount;
   const status = get('status');
   if (status) row.status = status;
+  // Optional order values (ADR-0013): empty cells are left out, unreadable ones make the row
+  // unusable like an unreadable amount.
+  for (const field of ['refunded', 'tax', 'shipping'] as const) {
+    const text = get(field);
+    if (!text) continue;
+    const value = parseAmount(text, settings.decimal);
+    if (value === null) continue;
+    if (Number.isNaN(value)) return undefined;
+    row[field] = value;
+  }
   return row;
 }
