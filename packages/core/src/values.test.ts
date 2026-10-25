@@ -104,3 +104,25 @@ describe('detectDateOrder', () => {
     expect(detectDateOrder([...samples])).toBe(expected);
   });
 });
+
+// Regression: a hostile file with a huge cell made the symbol-stripping pattern take quadratic
+// time (20,000 letters took about a second; a million would hang the worker).
+describe('very long cells', () => {
+  const huge = `${'a'.repeat(20_000)}1`;
+
+  it.each([
+    ['parseAmount', () => parseAmount(huge, '.')],
+    ['parseDate', () => parseDate(huge, 'dmy')],
+    ['detectDecimal', () => detectDecimal([huge, huge])],
+    ['detectDateOrder', () => detectDateOrder([huge])],
+  ])('%s refuses them quickly', (_name, run) => {
+    const started = performance.now();
+    run();
+    expect(performance.now() - started).toBeLessThan(50);
+  });
+
+  it('are not amounts or dates', () => {
+    expect(parseAmount(huge, '.')).toBeNaN();
+    expect(parseDate(huge, 'dmy')).toBeNaN();
+  });
+});

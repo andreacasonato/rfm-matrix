@@ -4,6 +4,10 @@ export type DecimalSeparator = '.' | ',';
 export type DateOrder = 'dmy' | 'mdy';
 export type DetectedDateOrder = 'iso' | DateOrder | 'ambiguous' | 'unknown';
 
+// No real amount or date is longer. Refusing longer cells up front also keeps the patterns
+// below from slowing down on a hostile file with huge cells.
+const maxCellLength = 64;
+
 const scientific = /^[+-]?\d+(?:\.\d+)?e[+-]?\d+$/i;
 const groupingSpaces = /[\s'’  ]/g;
 
@@ -11,6 +15,7 @@ const groupingSpaces = /[\s'’  ]/g;
 export function parseAmount(text: string, decimal: DecimalSeparator): number | null {
   let s = text.trim();
   if (!s) return null;
+  if (s.length > maxCellLength) return Number.NaN;
   if (scientific.test(s)) return Number(s);
 
   let negative = false;
@@ -45,6 +50,7 @@ export function detectDecimal(samples: string[]): DecimalSeparator {
   let comma = 0;
   let point = 0;
   for (const sample of samples) {
+    if (sample.length > maxCellLength) continue;
     const s = sample.trim().replace(/[^\d.,]+$/, '');
     if (/,\d{1,2}$/.test(s)) comma++;
     else if (/\.\d{1,2}$/.test(s) || /,\d{3}$/.test(s)) point++;
@@ -89,6 +95,7 @@ function build(
 /** UTC milliseconds, or NaN when the text is not a date in a supported form. */
 export function parseDate(text: string, order: DateOrder): number {
   const s = text.trim();
+  if (s.length > maxCellLength) return Number.NaN;
   const iso = isoDate.exec(s);
   if (iso) {
     const [, y, m, d, h, min, sec, zone] = iso;
