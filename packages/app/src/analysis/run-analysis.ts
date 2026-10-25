@@ -1,12 +1,15 @@
-// The worker's analysis job, kept free of worker globals so it can be tested in Node.
+// The worker's analysis job, kept free of worker globals so it can be tested in Node. It posts
+// the result and returns every scored customer for the worker to keep.
 import {
   applySegments,
   type CleaningRules,
   defaultScoring,
   defaultSegmentMap,
+  gridCells,
   score,
   summariseSegments,
 } from '@rfm-matrix/core';
+import { buildCustomerTable, type CustomerTable } from '../segment/customer-table';
 import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 import { readOrders } from './read-orders';
 
@@ -24,7 +27,7 @@ export async function runAnalysis(
   plan: AnalysisPlan,
   post: (message: WorkerMessage) => void,
   { now = () => performance.now(), chunkSize, format = {} }: Options = {},
-): Promise<void> {
+): Promise<CustomerTable | undefined> {
   const started = now();
   try {
     const read = await readOrders(source, plan, {
@@ -38,7 +41,11 @@ export async function runAnalysis(
     const scores = score(customers, { scoring, ...(analysisDate ? { analysisDate } : {}) });
     const segmented = applySegments(scores.customers, defaultSegmentMap);
     let monetaryTotal = 0;
-    for (const customer of customers) monetaryTotal += customer.monetary;
+    let repeatCustomers = 0;
+    for (const customer of customers) {
+      monetaryTotal += customer.monetary;
+      if (customer.orderCount >= 2) repeatCustomers++;
+    }
     post({
       type: 'done',
       rowsRead: read.rowsRead,
@@ -52,9 +59,14 @@ export async function runAnalysis(
       problems: read.problems.slice(0, 10),
       analysisDate: scores.analysisDate.toISOString().slice(0, 10),
       segments: summariseSegments(segmented, defaultSegmentMap),
+      grid: gridCells(segmented, defaultSegmentMap),
+      repeatCustomers,
       elapsedMs: now() - started,
     });
+    // Kept by the worker for segment detail and export, never sent to the page whole (S6).
+    return buildCustomerTable(segmented, plan.mapping.email !== undefined);
   } catch (error) {
     post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+    return undefined;
   }
 }

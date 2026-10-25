@@ -14,12 +14,21 @@ import {
 import type { OrderRow } from './index';
 import { OrderColumns, type ValueField, valueFields } from './order-columns';
 
+/**
+ * Chrome's JavaScript engine (V8) often keeps a substring as a view into the text it was cut
+ * from, so storing one cell would keep its whole 4 MB slice of the file alive. Strings kept for
+ * every customer are copied first. Regression: emails kept this way raised peak memory for 1M
+ * rows from 863 MB to 1,496 MB (S6).
+ */
+export const detachString = (text: string) => ` ${text}`.slice(1);
+
 export type CustomerAggregate = {
   customerKey: string;
   orderCount: number;
   monetary: number;
   firstOrderAt: Date;
   lastOrderAt: Date;
+  email?: string;
 };
 
 /** `order`: first non-empty value per order; `line`: add up every row (ADR-0012). */
@@ -35,6 +44,7 @@ export class OrderBook {
   private readonly orderIndex = new Map<string, number>();
   private readonly customerIndex = new Map<string, number>();
   private readonly customerKeys: string[] = [];
+  private readonly customerEmails: (string | undefined)[] = [];
   private readonly statusIndex = new Map<string, number>();
   private readonly statuses: string[] = [];
   private readonly columns = new OrderColumns();
@@ -51,8 +61,11 @@ export class OrderBook {
   add(row: OrderRow): void {
     let customer = this.customerIndex.get(row.customerKey);
     if (customer === undefined) {
-      customer = this.customerKeys.push(row.customerKey) - 1;
+      customer = this.customerKeys.push(detachString(row.customerKey)) - 1;
       this.customerIndex.set(row.customerKey, customer);
+    }
+    if (row.email && this.customerEmails[customer] === undefined) {
+      this.customerEmails[customer] = detachString(row.email);
     }
     const key = `${customer}\u0000${row.orderId}`;
     let i = this.orderIndex.get(key);
@@ -180,12 +193,14 @@ export class OrderBook {
         counts.customersWithoutOrders++;
         continue;
       }
+      const email = this.customerEmails[c];
       customers.push({
         customerKey: this.customerKeys[c] ?? '',
         orderCount: orderCount[c] ?? 0,
         monetary: monetary[c] ?? 0,
         firstOrderAt: new Date(first[c] ?? 0),
         lastOrderAt: new Date(last[c] ?? 0),
+        ...(email ? { email } : {}),
       });
     }
     const analysisDate = analysisDay === undefined ? undefined : new Date(analysisDay * dayMs);

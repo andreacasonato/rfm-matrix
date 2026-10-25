@@ -14,6 +14,8 @@ export type OrderRow = {
   refunded?: number;
   tax?: number;
   shipping?: number;
+  /** As written in the file; only when an email column is mapped (SCHEMA.md). */
+  email?: string;
 };
 
 export type ScoringConfig = {
@@ -34,6 +36,7 @@ export type CustomerScore = {
   f: Score;
   m: Score;
   segmentId: string;
+  email?: string;
 };
 
 export type {
@@ -49,6 +52,8 @@ export {
   orderCounts,
   statusCounts,
 } from './cleaning';
+export type { GridCell } from './grid';
+export { gridCells } from './grid';
 export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';
 export type { AmountLevel, CustomerAggregate, OrderBookResult } from './orders';

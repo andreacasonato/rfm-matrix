@@ -42,7 +42,7 @@ export function App() {
   const start = () => setScreen({ name: 'start' });
 
   return (
-    <Page>
+    <Page wide={screen.name === 'results'}>
       {screen.name === 'start' && (
         <StartScreen
           storage={storage}

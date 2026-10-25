@@ -212,6 +212,9 @@ importers:
       '@types/node':
         specifier: 24.19.1
         version: 24.19.1
+      '@types/papaparse':
+        specifier: 5.5.2
+        version: 5.5.2
       '@types/react':
         specifier: 19.3.0
         version: 19.3.0
@@ -221,6 +224,9 @@ importers:
       jsdom:
         specifier: 30.1.2
         version: 30.1.2
+      papaparse:
+        specifier: 5.7.0
+        version: 5.7.0
       tailwindcss:
         specifier: 4.3.3
         version: 4.3.3

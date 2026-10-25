@@ -1,15 +1,4 @@
-const maxChars = 40;
-
-// Long values are cut at 40 characters, with the full text on hover or focus (APP_FLOW "States").
-function Cell({ value }: { value: string }) {
-  if (value.length <= maxChars) return <>{value}</>;
-  return (
-    // biome-ignore lint/a11y/noNoninteractiveTabindex: focus reveals the full value
-    <span title={value} tabIndex={0}>
-      {`${value.slice(0, maxChars)}…`}
-    </span>
-  );
-}
+import { Truncated } from '../components/Truncated';
 
 export function PreviewTable({ header, rows }: { header: string[]; rows: string[][] }) {
   return (
@@ -25,7 +14,7 @@ export function PreviewTable({ header, rows }: { header: string[]; rows: string[
                 scope="col"
                 className="whitespace-nowrap px-3 py-2 font-semibold"
               >
-                <Cell value={name} />
+                <Truncated value={name} />
               </th>
             ))}
           </tr>
@@ -37,7 +26,7 @@ export function PreviewTable({ header, rows }: { header: string[]; rows: string[
               {header.map((_, c) => (
                 // biome-ignore lint/suspicious/noArrayIndexKey: columns follow the header order
                 <td key={c} className="whitespace-nowrap px-3 py-2 text-text-secondary">
-                  <Cell value={row[c] ?? ''} />
+                  <Truncated value={row[c] ?? ''} />
                 </td>
               ))}
             </tr>

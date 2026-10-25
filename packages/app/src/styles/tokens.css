@@ -44,6 +44,15 @@
   --text-number: 13px;
   --text-number--line-height: 20px;
 
+  /* The one animated moment (DESIGN.md): heatmap cells fill once when an analysis finishes.
+     Used only with the motion-safe variant, so reduced-motion users see no animation. */
+  --animate-heat-fill: heat-fill 600ms ease-out both;
+  @keyframes heat-fill {
+    from {
+      background-color: var(--color-surface);
+    }
+  }
+
   --radius-control: 8px;
   --radius-panel: 12px;
   --radius-cell: 6px;

@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultExcludedStatuses, orderCounts } from './cleaning';
 import { cleaningRows, cleaningRules } from './fixtures/cleaning-orders';
 import type { OrderRow } from './index';
-import { OrderBook } from './orders';
+import { detachString, OrderBook } from './orders';
 
 const row = (customerKey: string, orderId: string, date: string, amount?: number): OrderRow => ({
   customerKey,
@@ -56,6 +56,18 @@ describe('OrderBook grouping (TRD §8 rules 1, 3, 4; ADR-0012)', () => {
     const undated: OrderRow = { customerKey: 'a', orderId: '#1', amount: 5 };
     const [a] = book([undated, row('a', '#1', '2026-01-05')]).finish(keepAll).customers;
     expect(a).toMatchObject({ orderCount: 1, monetary: 5 });
+  });
+
+  it('keeps the first email seen for each customer', () => {
+    const rows = [
+      { ...row('a', '#1', '2026-01-05', 1) },
+      { ...row('a', '#2', '2026-01-06', 1), email: 'a@example.test' },
+      { ...row('a', '#3', '2026-01-07', 1), email: 'other@example.test' },
+      row('b', '#4', '2026-01-08', 1),
+    ];
+    const [a, b] = book(rows).finish(keepAll).customers;
+    expect(a?.email).toBe('a@example.test');
+    expect(b).not.toHaveProperty('email');
   });
 
   it('defaults the analysis date to the day after the latest order', () => {
@@ -174,5 +186,14 @@ describe('OrderBook (properties)', () => {
         expect(customers.reduce((n, c) => n + c.orderCount, 0)).toBe(orders.used);
       }),
     );
+  });
+});
+
+describe('detachString', () => {
+  it('returns an equal string', () => {
+    const cell = `${'x'.repeat(100)}a@example.test${'y'.repeat(100)}`;
+    const email = cell.slice(100, 114);
+    expect(detachString(email)).toBe('a@example.test');
+    expect(detachString('')).toBe('');
   });
 });

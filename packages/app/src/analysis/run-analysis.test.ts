@@ -25,12 +25,14 @@ const csv = [
 async function run(text: string, chunkSize?: number) {
   const messages: WorkerMessage[] = [];
   let clock = 0;
-  await runAnalysis(text, plan, (m) => messages.push(m), {
+  lastTable = await runAnalysis(text, plan, (m) => messages.push(m), {
     now: () => (clock += 300),
     ...(chunkSize === undefined ? {} : { chunkSize }),
   });
   return messages;
 }
+
+let lastTable: Awaited<ReturnType<typeof runAnalysis>>;
 
 describe('runAnalysis', () => {
   it('reports totals and segment counts when the file is done', async () => {
@@ -49,6 +51,14 @@ describe('runAnalysis', () => {
     expect(done.segments.segments).toHaveLength(11);
     expect(done.segments.segments.reduce((n, s) => n + s.customers, 0)).toBe(6);
     expect(done.segments.totals).toEqual({ customers: 6, revenue: 100 });
+    // The grid (S5): 25 cells adding up to the same totals, and the repeat customers.
+    expect(done.grid).toHaveLength(25);
+    expect(done.grid.reduce((n, c) => n + c.customers, 0)).toBe(6);
+    expect(done.grid.reduce((n, c) => n + c.revenue, 0)).toBeCloseTo(100, 6);
+    expect(done.repeatCustomers).toBe(1);
+    // Kept by the worker for segment detail and export (S6), with emails as mapped.
+    expect(lastTable?.keys).toHaveLength(6);
+    expect(lastTable?.emails).toContain('a@example.test');
   });
 
   it('posts progress while reading, at most every 250 ms or 50,000 rows', async () => {

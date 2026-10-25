@@ -109,6 +109,7 @@ export function score(
       r: (6 - scoreValue(recencyDays, breakpoints.r)) as Score,
       f: scoreValue(c.orderCount, breakpoints.f),
       m: scoreValue(c.monetary, breakpoints.m),
+      ...(c.email ? { email: c.email } : {}),
     };
   });
 
