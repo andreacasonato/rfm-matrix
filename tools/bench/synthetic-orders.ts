@@ -7,6 +7,8 @@ export type Expected = {
   customers: number;
   orders: number;
   totalCents: number;
+  /** Totals under the app's default cleaning rules: fully refunded orders left out (ADR-0013). */
+  cleaned: { customers: number; orders: number; totalCents: number };
 };
 
 const header = [
@@ -79,6 +81,9 @@ export function writeSyntheticOrders(
   let unusableRows = 0;
   let orders = 0;
   let totalCents = 0;
+  const cleanedCustomers = new Set<number>();
+  let cleanedOrders = 0;
+  let cleanedCents = 0;
   let buffer = `${header.join(',')}\n`;
 
   for (let order = 1001; written < rows; order++) {
@@ -146,11 +151,23 @@ export function writeSyntheticOrders(
       }
     }
     if (email) {
-      if (!customers.has(customer)) customers.add(customer);
+      customers.add(customer);
       orders++;
       totalCents += total;
+      if (status !== 'refunded') {
+        cleanedCustomers.add(customer);
+        cleanedOrders++;
+        cleanedCents += total;
+      }
     }
   }
   write(buffer);
-  return { rows: written, unusableRows, customers: customers.size, orders, totalCents };
+  return {
+    rows: written,
+    unusableRows,
+    customers: customers.size,
+    orders,
+    totalCents,
+    cleaned: { customers: cleanedCustomers.size, orders: cleanedOrders, totalCents: cleanedCents },
+  };
 }

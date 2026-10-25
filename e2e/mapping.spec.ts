@@ -12,6 +12,7 @@ async function upload(page: Page, name: string, csv: string) {
 }
 
 async function result(page: Page) {
+  await page.getByRole('button', { name: 'Run analysis' }).click();
   const output = page.locator('output[data-status=done]');
   await expect(output).toBeVisible();
   return JSON.parse((await output.getAttribute('data-result')) ?? '{}');

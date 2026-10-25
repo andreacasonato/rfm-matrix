@@ -39,6 +39,9 @@ const fields: [Field, Need][] = [
   ['orderedAt', 'required'],
   ['amount', 'required'],
   ['status', 'optional'],
+  ['refunded', 'optional'],
+  ['tax', 'optional'],
+  ['shipping', 'optional'],
 ];
 
 const select =
@@ -74,11 +77,13 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
       const time = parseDate(sample, dateOrder);
       return Number.isNaN(time) ? null : formatDay(time);
     },
-    amount: (sample) => {
-      const value = parseAmount(sample, decimal);
-      return value === null || Number.isNaN(value) ? null : formatAmount(value);
-    },
   };
+  const readAmount = (sample: string) => {
+    const value = parseAmount(sample, decimal);
+    return value === null || Number.isNaN(value) ? null : formatAmount(value);
+  };
+  for (const field of ['amount', 'refunded', 'tax', 'shipping'] as const)
+    readers[field] = readAmount;
   const presetInfo = presets.find((p) => p.id === preset);
 
   return (

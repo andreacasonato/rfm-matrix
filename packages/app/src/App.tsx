@@ -1,9 +1,12 @@
 // Screen switching (ADR-0011: a small state machine, no router).
 import type { CsvPreview } from '@rfm-matrix/io';
 import { useEffect, useState } from 'react';
-import { startPreview } from './analysis/worker-client';
+import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
+import { startPreview, startSummary } from './analysis/worker-client';
 import { Page } from './components/Page';
+import { defaultCleaning } from './mapping/default-cleaning';
 import { initialPlan } from './mapping/initial-plan';
+import { CleanScreen } from './screens/CleanScreen';
 import { MapScreen } from './screens/MapScreen';
 import { type AnalysisInput, ResultsScreen } from './screens/ResultsScreen';
 import { StartScreen } from './screens/StartScreen';
@@ -14,6 +17,7 @@ type Screen =
   | { name: 'start' }
   | { name: 'upload' }
   | { name: 'map'; file: File; preview: CsvPreview }
+  | { name: 'clean'; file: File; preview: CsvPreview; plan: AnalysisPlan; format: CsvFormat }
   | { name: 'results'; label: string; load(): Promise<AnalysisInput> };
 
 async function loadSample(): Promise<AnalysisInput> {
@@ -21,9 +25,11 @@ async function loadSample(): Promise<AnalysisInput> {
   const response = await fetch('sample-orders.csv');
   if (!response.ok) throw new Error(`The sample data could not be loaded (${response.status}).`);
   const source = await response.blob();
-  // The sample goes through the same preview and guess as an uploaded file.
+  // The sample goes through the same preview, guess and default cleaning as an uploaded file.
   const { preview } = await startPreview(source, {}, () => {}).result;
-  return { source, plan: initialPlan(preview).plan, format: {} };
+  const { plan } = initialPlan(preview);
+  const { summary } = await startSummary(source, plan, {}, () => {}).result;
+  return { source, plan: { ...plan, cleaning: defaultCleaning(summary, plan) }, format: {} };
 }
 
 export function App() {
@@ -57,9 +63,26 @@ export function App() {
           fileName={screen.file.name}
           preview={screen.preview}
           onBack={() => setScreen({ name: 'upload' })}
-          onConfirm={(plan) => {
-            const { file, preview } = screen;
-            const format = { encoding: preview.encoding, delimiter: preview.delimiter };
+          onConfirm={(plan) =>
+            setScreen({
+              ...screen,
+              name: 'clean',
+              plan,
+              // Kept in state so the cleaning screen's summary job is not restarted on re-render.
+              format: { encoding: screen.preview.encoding, delimiter: screen.preview.delimiter },
+            })
+          }
+        />
+      )}
+      {screen.name === 'clean' && (
+        <CleanScreen
+          fileName={screen.file.name}
+          file={screen.file}
+          plan={screen.plan}
+          format={screen.format}
+          onBack={() => setScreen({ name: 'map', file: screen.file, preview: screen.preview })}
+          onRun={(plan) => {
+            const { file, format } = screen;
             setScreen({
               name: 'results',
               label: file.name,

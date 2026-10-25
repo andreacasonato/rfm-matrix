@@ -1,7 +1,8 @@
 import { expect, test } from '@playwright/test';
 
-// packages/app/public/sample-orders.csv: 2,000 synthetic rows, seed 42.
-const sampleCustomers = 598;
+// packages/app/public/sample-orders.csv: 2,000 synthetic rows, seed 42; 540 customers remain
+// once the default cleaning leaves fully refunded orders out (ADR-0013).
+const sampleCustomers = 540;
 
 test.describe('tracer bullet (M2)', () => {
   test('Try sample data lists 11 segments whose counts add up, without leaving the origin', async ({
@@ -44,6 +45,7 @@ test.describe('tracer bullet (M2)', () => {
     });
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Confirm columns' }).click();
+    await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.getByRole('alert')).toContainText('at least 5 customers');
   });
 });

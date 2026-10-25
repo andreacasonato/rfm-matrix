@@ -1,7 +1,7 @@
 import { resolve } from 'node:path';
 import { expect, type Page, test } from '@playwright/test';
 
-// The bundled sample: 2,000 synthetic rows, 598 customers.
+// The bundled sample: 2,000 synthetic rows; 540 customers after default cleaning.
 const samplePath = resolve('packages/app/public/sample-orders.csv');
 
 function watchOtherOrigins(page: Page, baseURL: string | undefined) {
@@ -34,9 +34,10 @@ test.describe('upload and preview (S1)', () => {
 
     await page.getByRole('button', { name: 'Continue' }).click();
     await page.getByRole('button', { name: 'Confirm columns' }).click();
+    await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.locator('td[data-total-customers]')).toHaveAttribute(
       'data-total-customers',
-      '598',
+      '540',
     );
     expect(otherOrigins).toEqual([]);
   });

@@ -1,6 +1,6 @@
 // Starts an analysis, clicks Cancel, and checks the worker is gone and no result arrives.
 import type { Browser } from '@playwright/test';
-import { previewFile, runAnalysis } from './navigate.ts';
+import { previewFile, runAnalysis, summariseFile } from './navigate.ts';
 
 export async function checkCancel(
   browser: Browser,
@@ -12,6 +12,7 @@ export async function checkCancel(
     const page = await context.newPage();
     await page.goto(url);
     await previewFile(page, csvPath);
+    await summariseFile(page);
     await runAnalysis(page);
     const cancel = page.getByRole('button', { name: 'Cancel' });
     await cancel.waitFor({ timeout: 10_000 });

@@ -24,6 +24,27 @@ type State =
 
 const count = (n: number) => n.toLocaleString('en-US');
 
+// Why some orders and customers are not in the results (ADR-0013).
+function LeftOut({ counts }: { counts: DoneMessage['cleaning'] }) {
+  const parts = [
+    [counts.status, 'by status'],
+    [counts.afterAnalysisDate, 'after the analysis date'],
+    [counts.beforeWindow, 'before the window'],
+    [counts.withoutDate, 'without a date'],
+  ]
+    .filter(([n]) => Number(n) > 0)
+    .map(([n, why]) => `${count(Number(n))} ${why}`);
+  if (parts.length === 0 && counts.customersWithoutOrders === 0) return null;
+  return (
+    <p className="text-text-secondary">
+      {parts.length > 0 && `Orders left out: ${parts.join(', ')}. `}
+      {counts.refundsApplied > 0 && `${count(counts.refundsApplied)} refunds subtracted. `}
+      {counts.customersWithoutOrders > 0 &&
+        `${count(counts.customersWithoutOrders)} customers had no order left to score.`}
+    </p>
+  );
+}
+
 const isCancel = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
 
 export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysis }: Props) {
@@ -112,6 +133,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
             {count(state.result.customers)} customers, {count(state.result.orders)} orders, in{' '}
             {(state.wallMs / 1000).toFixed(2)} s.
           </output>
+          <LeftOut counts={state.result.cleaning} />
           <p className="text-text-secondary">
             Analysed as of {state.result.analysisDate}. Recency and monetary scores use quintiles
             (as Excel's PERCENTILE.INC); frequency uses fixed breaks of 1, 2, 3, 4–5 and 6+ orders.

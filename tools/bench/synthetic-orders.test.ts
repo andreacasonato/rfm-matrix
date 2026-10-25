@@ -46,6 +46,9 @@ describe('writeSyntheticOrders', () => {
     const customers = new Set<string>();
     let cents = 0;
     let unusable = 0;
+    // The status is on an order's first row only, as in Shopify exports.
+    const refunded = new Set<string>();
+    const kept = { customers: new Set<string>(), orders: new Set<string>(), cents: 0 };
     for (const line of lines.slice(1)) {
       const row = cells(line);
       const email = row[col('Email')] ?? '';
@@ -53,9 +56,16 @@ describe('writeSyntheticOrders', () => {
         unusable++;
         continue;
       }
+      const order = row[col('Name')] ?? '';
+      const amount = Math.round(Number(row[col('Total')] || '0') * 100);
       customers.add(email);
-      orders.add(row[col('Name')] ?? '');
-      cents += Math.round(Number(row[col('Total')] || '0') * 100);
+      orders.add(order);
+      cents += amount;
+      if (row[col('Financial Status')] === 'refunded') refunded.add(order);
+      if (refunded.has(order)) continue;
+      kept.customers.add(email);
+      kept.orders.add(order);
+      kept.cents += amount;
     }
     expect(expected).toEqual({
       rows: 3000,
@@ -63,8 +73,14 @@ describe('writeSyntheticOrders', () => {
       customers: customers.size,
       orders: orders.size,
       totalCents: cents,
+      cleaned: {
+        customers: kept.customers.size,
+        orders: kept.orders.size,
+        totalCents: kept.cents,
+      },
     });
     expect(unusable).toBeGreaterThan(0);
+    expect(refunded.size).toBeGreaterThan(0);
   });
 
   it('is repeatable for a seed and averages about 300 bytes per row', () => {

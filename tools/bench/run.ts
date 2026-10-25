@@ -1,7 +1,8 @@
 // Usage: node tools/bench/run.ts [--rows 1000000] [--runs 20]
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
-// Drives the real screens. Timed from Confirm columns to segment counts ready (parse, aggregate,
-// score, segment); the upload preview's own read is reported separately.
+// Drives the real screens. Timed from Run analysis to segment counts ready (parse, aggregate,
+// clean, score, segment); the preview's and the cleaning summary's own reads are reported
+// separately.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 import { resolve } from 'node:path';
@@ -9,7 +10,7 @@ import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 import { checkCancel } from './cancel-check.ts';
 import { sampleMemory } from './memory.ts';
-import { previewFile, runAnalysis } from './navigate.ts';
+import { previewFile, runAnalysis, summariseFile } from './navigate.ts';
 import { serve } from './serve.ts';
 
 const { values } = parseArgs({
@@ -34,6 +35,7 @@ const percentile = (sorted: number[], p: number) =>
 const results: {
   wallMs: number;
   previewMs: number;
+  summaryMs: number;
   longestBlockMs: number;
   peakMemoryBytes: number;
 }[] = [];
@@ -60,6 +62,7 @@ try {
     );
     const stopSampling = sampleMemory(process.pid);
     const previewMs = await previewFile(page, csvPath);
+    const summaryMs = await summariseFile(page);
     await runAnalysis(page);
     const outcome = page.locator('output[data-status=done], [role=alert]');
     await outcome.waitFor({ timeout: 180_000 });
@@ -80,26 +83,27 @@ try {
     const checks: [string, number, number][] = [
       ['rows', result.rowsRead, expected.rows],
       ['unusable rows', result.invalidRows, expected.unusableRows],
-      ['customers', result.customers, expected.customers],
-      ['orders', result.orders, expected.orders],
+      // Default cleaning leaves fully refunded orders out (ADR-0013).
+      ['customers', result.customers, expected.cleaned.customers],
+      ['orders', result.orders, expected.cleaned.orders],
       [
         'customers across segments',
         result.segments.segments.reduce(
           (n: number, seg: { customers: number }) => n + seg.customers,
           0,
         ),
-        expected.customers,
+        expected.cleaned.customers,
       ],
     ];
     for (const [name, got, want] of checks) {
       if (got !== want) mismatches.push(`run ${run}: ${name} ${got}, expected ${want}`);
     }
-    if (Math.abs(result.monetaryTotal * 100 - expected.totalCents) > 100) {
+    if (Math.abs(result.monetaryTotal * 100 - expected.cleaned.totalCents) > 100) {
       mismatches.push(
-        `run ${run}: total ${result.monetaryTotal}, expected ${expected.totalCents / 100}`,
+        `run ${run}: total ${result.monetaryTotal}, expected ${expected.cleaned.totalCents / 100}`,
       );
     }
-    results.push({ wallMs, previewMs, longestBlockMs, peakMemoryBytes });
+    results.push({ wallMs, previewMs, summaryMs, longestBlockMs, peakMemoryBytes });
     console.log(
       `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms`,
     );
@@ -118,14 +122,20 @@ const summary = {
   browser: `Chromium ${browser.version()} (headless, Playwright)`,
   rows,
   runs,
-  customers: expected.customers,
+  customers: expected.cleaned.customers,
   p50Ms: Math.round(percentile(sorted, 50)),
   p95Ms: Math.round(percentile(sorted, 95)),
   rowsPerSecondAtP50: Math.round(rows / (percentile(sorted, 50) / 1000)),
-  // Reading the file once for the upload preview (row count), before the analysis reads it.
+  // The upload preview and the cleaning summary each read the file once before the analysis.
   previewP50Ms: Math.round(
     percentile(
       results.map((r) => r.previewMs).sort((a, b) => a - b),
+      50,
+    ),
+  ),
+  summaryP50Ms: Math.round(
+    percentile(
+      results.map((r) => r.summaryMs).sort((a, b) => a - b),
       50,
     ),
   ),
