@@ -1,98 +1,55 @@
-// The worker's job, kept free of worker globals so it can be tested in Node.
+// The worker's analysis job, kept free of worker globals so it can be tested in Node.
 import {
   applySegments,
-  type ColumnIndexes,
-  createAggregator,
+  type CleaningRules,
+  defaultScoring,
   defaultSegmentMap,
   score,
   summariseSegments,
-  toOrderRow,
 } from '@rfm-matrix/core';
-import { streamCsv } from '@rfm-matrix/io';
-import type { ColumnNames, WorkerMessage } from './protocol';
+import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
+import { readOrders } from './read-orders';
 
-const progressEveryMs = 250;
-const progressEveryRows = 50_000;
+type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
-type Options = { now?: () => number; chunkSize?: number };
-
-function findColumns(header: string[], names: ColumnNames): ColumnIndexes {
-  const indexOf = (name: string) => {
-    const index = header.findIndex((cell) => cell.trim() === name);
-    if (index < 0) throw new Error(`Missing column: ${name}`);
-    return index;
-  };
-  return {
-    customer: indexOf(names.customer),
-    orderId: indexOf(names.orderId),
-    orderedAt: indexOf(names.orderedAt),
-    amount: indexOf(names.amount),
-  };
-}
+// Until the user chooses on the cleaning screen, every order counts.
+const keepAll: CleaningRules = {
+  excludedStatuses: [],
+  amountBasis: 'gross',
+  subtractRefunds: true,
+};
 
 export async function runAnalysis(
   source: Blob | string,
-  names: ColumnNames,
+  plan: AnalysisPlan,
   post: (message: WorkerMessage) => void,
-  { now = () => performance.now(), chunkSize }: Options = {},
+  { now = () => performance.now(), chunkSize, format = {} }: Options = {},
 ): Promise<void> {
   const started = now();
-  const aggregator = createAggregator();
-  let columns: ColumnIndexes | undefined;
-  let rowsRead = 0;
-  let rowsUsed = 0;
-  let lastPostAt = started;
-  let lastPostRows = 0;
-
   try {
-    const summary = await streamCsv(
-      source,
-      {
-        onHeader(header) {
-          columns = findColumns(header, names);
-        },
-        onRows(rows, bytesRead) {
-          if (!columns) return;
-          for (const cells of rows) {
-            const row = toOrderRow(cells, columns);
-            if (row) {
-              aggregator.add(row);
-              rowsUsed++;
-            }
-          }
-          rowsRead += rows.length;
-          const time = now();
-          if (
-            time - lastPostAt >= progressEveryMs ||
-            rowsRead - lastPostRows >= progressEveryRows
-          ) {
-            post({ type: 'progress', rowsRead, bytesRead, customers: aggregator.customerCount });
-            lastPostAt = time;
-            lastPostRows = rowsRead;
-          }
-        },
-      },
-      chunkSize === undefined ? {} : { chunkSize },
-    );
-
-    const customers = aggregator.customers();
-    const scores = score(customers);
+    const read = await readOrders(source, plan, {
+      format,
+      now,
+      ...(chunkSize === undefined ? {} : { chunkSize }),
+      onProgress: (progress) => post({ type: 'progress', ...progress }),
+    });
+    const { customers, counts, analysisDate } = read.book.finish(plan.cleaning ?? keepAll);
+    const scoring = plan.scoring ?? defaultScoring;
+    const scores = score(customers, { scoring, ...(analysisDate ? { analysisDate } : {}) });
     const segmented = applySegments(scores.customers, defaultSegmentMap);
-    let orders = 0;
     let monetaryTotal = 0;
-    for (const customer of customers) {
-      orders += customer.orderCount;
-      monetaryTotal += customer.monetary;
-    }
+    for (const customer of customers) monetaryTotal += customer.monetary;
     post({
       type: 'done',
-      rowsRead: summary.rowsRead,
-      rowsUsed,
-      invalidRows: summary.rowsRead - rowsUsed,
-      customers: aggregator.customerCount,
-      orders,
+      rowsRead: read.rowsRead,
+      rowsUsed: read.rowsUsed,
+      invalidRows: read.rowsRead - read.rowsUsed,
+      customers: customers.length,
+      orders: counts.used,
       monetaryTotal,
-      problems: summary.problems.slice(0, 10),
+      cleaning: counts,
+      scoring,
+      problems: read.problems.slice(0, 10),
       analysisDate: scores.analysisDate.toISOString().slice(0, 10),
       segments: summariseSegments(segmented, defaultSegmentMap),
       elapsedMs: now() - started,

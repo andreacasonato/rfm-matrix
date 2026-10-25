@@ -1,6 +1,7 @@
 // R, F and M scores from 1 to 5 (TRD §8, ADR-0004, ADR-0010).
-import type { CustomerAggregate } from './aggregate';
+
 import type { CustomerScore, Score } from './index';
+import type { CustomerAggregate } from './orders';
 import { type Breakpoints, quintileBreakpoints } from './percentile';
 
 export type ScoredCustomer = Omit<CustomerScore, 'segmentId'>;
@@ -22,8 +23,40 @@ export class NotEnoughCustomersError extends Error {
 
 const dayMs = 86_400_000;
 const minimumCustomers = 5;
-// Fixed frequency breaks 1, 2, 3, 4–5, 6+ written as breakpoints for the same formula.
-const frequencyBreaks: Breakpoints = [1, 2, 3, 5];
+
+export type Dimension = 'r' | 'f' | 'm';
+/** Quintiles from the data, or four fixed cut points (TRD §8 rules 5–7). */
+export type DimensionMethod = { method: 'quantile' } | { method: 'fixed'; breaks: Breakpoints };
+export type ScoringMethods = Record<Dimension, DimensionMethod>;
+
+// Frequency defaults to fixed breaks 1, 2, 3, 4–5, 6+ (ADR-0004 rule 6), written as cut points
+// for the same formula as quintiles.
+export const defaultScoring: ScoringMethods = {
+  r: { method: 'quantile' },
+  f: { method: 'fixed', breaks: [1, 2, 3, 5] },
+  m: { method: 'quantile' },
+};
+
+/** Problems with fixed cut points, in plain words; empty when they can be used. */
+export function validateBreaks(dimension: Dimension, breaks: number[]): string[] {
+  if (breaks.length !== 4) return ['Enter 4 cut points.'];
+  if (breaks.some((b) => !Number.isFinite(b))) return ['Every cut point must be a number.'];
+  const problems: string[] = [];
+  if (breaks.some((b, i) => i > 0 && b <= (breaks[i - 1] ?? b))) {
+    problems.push('Each cut point must be larger than the one before.');
+  }
+  const whole = breaks.every((b) => Number.isInteger(b) && b >= 0);
+  if (dimension === 'r' && !whole) problems.push('Use whole numbers of days, from 0 up.');
+  if (dimension === 'f' && !whole) problems.push('Use whole numbers of orders.');
+  return problems;
+}
+
+function breaksFor(dimension: Dimension, method: DimensionMethod, values: number[]): Breakpoints {
+  if (method.method === 'quantile') return quintileBreakpoints(values);
+  const [problem] = validateBreaks(dimension, [...method.breaks]);
+  if (problem) throw new Error(problem);
+  return method.breaks;
+}
 
 const utcDay = (date: Date) => Math.floor(date.getTime() / dayMs);
 
@@ -42,8 +75,9 @@ function binSizes(scores: Score[]): BinSizes {
 
 export function score(
   customers: CustomerAggregate[],
-  options: { analysisDate?: Date } = {},
+  options: { analysisDate?: Date; scoring?: ScoringMethods } = {},
 ): ScoreResult {
+  const scoring = options.scoring ?? defaultScoring;
   if (customers.length < minimumCustomers) throw new NotEnoughCustomersError(customers.length);
 
   let latestDay = Number.NEGATIVE_INFINITY;
@@ -52,9 +86,17 @@ export function score(
 
   const recency = customers.map((c) => analysisDay - utcDay(c.lastOrderAt));
   const breakpoints = {
-    r: quintileBreakpoints(recency),
-    f: frequencyBreaks,
-    m: quintileBreakpoints(customers.map((c) => c.monetary)),
+    r: breaksFor('r', scoring.r, recency),
+    f: breaksFor(
+      'f',
+      scoring.f,
+      customers.map((c) => c.orderCount),
+    ),
+    m: breaksFor(
+      'm',
+      scoring.m,
+      customers.map((c) => c.monetary),
+    ),
   };
 
   const scored = customers.map((c, i): ScoredCustomer => {

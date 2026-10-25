@@ -1,9 +1,34 @@
 // Messages between the page and the analysis worker (ADR-0003).
-import type { SegmentsSummary } from '@rfm-matrix/core';
+import type {
+  AmountLevel,
+  CleaningCounts,
+  CleaningRules,
+  ColumnMapping,
+  OrderProfile,
+  ReadSettings,
+  ScoringMethods,
+  SegmentsSummary,
+} from '@rfm-matrix/core';
+import type { CsvPreview, TextEncodingName, UnreadableKind } from '@rfm-matrix/io';
 
-export type ColumnNames = { customer: string; orderId: string; orderedAt: string; amount: string };
+/** How to turn the file's rows into orders (ADR-0012), confirmed on the Map columns screen. */
+export type AnalysisPlan = {
+  mapping: ColumnMapping;
+  read: ReadSettings;
+  amountLevel: AmountLevel;
+  /** Chosen on the cleaning screen; without it every order counts. */
+  cleaning?: CleaningRules;
+  /** Chosen on the cleaning screen; without it the default methods apply (ADR-0004). */
+  scoring?: ScoringMethods;
+};
 
-export type StartMessage = { type: 'start'; file: Blob; columns: ColumnNames };
+/** How to read the file; missing fields are detected. */
+export type CsvFormat = { encoding?: TextEncodingName; delimiter?: string };
+
+export type StartMessage = { type: 'start'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
+export type PreviewRequest = { type: 'preview'; file: Blob; format: CsvFormat };
+export type SummaryRequest = { type: 'summary'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
+export type WorkerRequest = StartMessage | PreviewRequest | SummaryRequest;
 
 export type ProgressMessage = {
   type: 'progress';
@@ -20,6 +45,8 @@ export type DoneMessage = {
   customers: number;
   orders: number;
   monetaryTotal: number;
+  cleaning: CleaningCounts;
+  scoring: ScoringMethods;
   problems: { row: number; message: string }[];
   /** UTC calendar date, YYYY-MM-DD (ADR-0010). */
   analysisDate: string;
@@ -27,6 +54,35 @@ export type DoneMessage = {
   elapsedMs: number;
 };
 
-export type ErrorMessage = { type: 'error'; message: string };
+export type PreviewProgressMessage = {
+  type: 'preview-progress';
+  rowsRead: number;
+  bytesRead: number;
+};
+export type PreviewDoneMessage = { type: 'preview-done'; preview: CsvPreview };
 
-export type WorkerMessage = ProgressMessage | DoneMessage | ErrorMessage;
+/** What the cleaning screen needs: orders by status and day, and how many rows were usable. */
+export type FileSummary = {
+  profile: OrderProfile;
+  rowsRead: number;
+  rowsUsed: number;
+  customers: number;
+};
+export type SummaryProgressMessage = {
+  type: 'summary-progress';
+  rowsRead: number;
+  bytesRead: number;
+  customers: number;
+};
+export type SummaryDoneMessage = { type: 'summary-done'; summary: FileSummary };
+
+export type ErrorMessage = { type: 'error'; message: string; unreadable?: UnreadableKind };
+
+export type WorkerMessage =
+  | ProgressMessage
+  | DoneMessage
+  | PreviewProgressMessage
+  | PreviewDoneMessage
+  | SummaryProgressMessage
+  | SummaryDoneMessage
+  | ErrorMessage;

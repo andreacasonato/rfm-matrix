@@ -41,6 +41,23 @@ describe('disallowedUrls', () => {
   });
 });
 
+describe('allowlist matching', () => {
+  const list = [
+    { prefix: 'https://tailwindcss.com', reason: 'exact' },
+    { prefix: 'https://react.dev/errors/', reason: 'folder' },
+  ];
+
+  it('treats an entry without a trailing slash as one exact URL', () => {
+    const text = '"https://tailwindcss.com" "https://tailwindcss.com.evil.example/x.js"';
+    expect(disallowedUrls(text, list)).toEqual(['https://tailwindcss.com.evil.example/x.js']);
+  });
+
+  it('treats an entry ending in a slash as everything below that path', () => {
+    const text = '"https://react.dev/errors/418" "https://react.dev/other"';
+    expect(disallowedUrls(text, list)).toEqual(['https://react.dev/other']);
+  });
+});
+
 describe('scanDirectory', () => {
   let dir = '';
   afterEach(() => rmSync(dir, { recursive: true, force: true }));

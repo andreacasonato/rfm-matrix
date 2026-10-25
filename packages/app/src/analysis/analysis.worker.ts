@@ -1,14 +1,20 @@
-// Runs parsing and aggregation off the main thread (ADR-0003).
-import type { StartMessage, WorkerMessage } from './protocol';
+// Runs parsing, previews and scoring off the main thread (ADR-0003).
+import type { WorkerMessage, WorkerRequest } from './protocol';
 import { runAnalysis } from './run-analysis';
+import { runPreview } from './run-preview';
+import { runSummary } from './run-summary';
 
 // The app compiles with the DOM library, so describe the worker scope we use here.
 const scope = self as unknown as {
-  onmessage: ((event: MessageEvent<StartMessage>) => void) | null;
+  onmessage: ((event: MessageEvent<WorkerRequest>) => void) | null;
   postMessage(message: WorkerMessage): void;
 };
 
 scope.onmessage = (event) => {
-  const { file, columns } = event.data;
-  void runAnalysis(file, columns, (message) => scope.postMessage(message));
+  const request = event.data;
+  const post = (message: WorkerMessage) => scope.postMessage(message);
+  if (request.type === 'preview') void runPreview(request.file, request.format, post);
+  else if (request.type === 'summary') {
+    void runSummary(request.file, request.plan, request.format, post);
+  } else void runAnalysis(request.file, request.plan, post, { format: request.format });
 };

@@ -32,8 +32,13 @@ export function externalUrls(text: string): string[] {
   return [...text.matchAll(urlPattern)].map((match) => match[0]);
 }
 
+// An entry ending in "/" allows everything below that path; any other entry is one exact URL,
+// so "https://a.com" cannot be stretched to "https://a.com.evil.example".
+const allows = (entry: AllowedUrl, url: string) =>
+  entry.prefix.endsWith('/') ? url.startsWith(entry.prefix) : url === entry.prefix;
+
 export function disallowedUrls(text: string, allowlist: AllowedUrl[]): string[] {
-  return externalUrls(text).filter((url) => !allowlist.some((a) => url.startsWith(a.prefix)));
+  return externalUrls(text).filter((url) => !allowlist.some((entry) => allows(entry, url)));
 }
 
 export function scanDirectory(dir: string, allowlist: AllowedUrl[]): HostFinding[] {
