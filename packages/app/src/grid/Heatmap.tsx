@@ -4,7 +4,7 @@
 import type { GridCell, Segment } from '@rfm-matrix/core';
 import { heatClasses, heatStep } from './heat';
 
-type Props = { cells: GridCell[]; segments: Segment[] };
+type Props = { cells: GridCell[]; segments: Segment[]; onOpen?(segmentId: string): void };
 
 const at = (cells: GridCell[], r: number, f: number) => cells.find((c) => c.r === r && c.f === f);
 
@@ -32,7 +32,7 @@ function edgeClasses(cell: GridCell, cells: GridCell[]): string {
     .join(' ');
 }
 
-export function Heatmap({ cells, segments }: Props) {
+export function Heatmap({ cells, segments, onOpen }: Props) {
   const largest = Math.max(0, ...cells.map((c) => c.customers));
   const name = (id: string | null) =>
     id === null ? 'Mixed segments' : (segments.find((s) => s.id === id)?.name ?? id);
@@ -71,6 +71,18 @@ export function Heatmap({ cells, segments }: Props) {
                 const segment = name(cell.segmentId);
                 const first = !labelled.has(cell.segmentId);
                 labelled.add(cell.segmentId);
+                const content = (
+                  <>
+                    {first && (
+                      <span className="block break-words hyphens-auto text-small leading-tight">
+                        {segment}
+                      </span>
+                    )}
+                    <span className="font-mono text-number">
+                      {cell.customers.toLocaleString('en-US')}
+                    </span>
+                  </>
+                );
                 return (
                   <td
                     key={f}
@@ -81,14 +93,18 @@ export function Heatmap({ cells, segments }: Props) {
                       step > 0 ? 'motion-safe:animate-heat-fill' : ''
                     } ${edgeClasses(cell, cells)}`}
                   >
-                    {first && (
-                      <span className="block break-words hyphens-auto text-small leading-tight">
-                        {segment}
-                      </span>
+                    {onOpen && cell.segmentId ? (
+                      <button
+                        type="button"
+                        aria-label={`Open ${segment}, R${r} F${f}`}
+                        onClick={() => cell.segmentId && onOpen(cell.segmentId)}
+                        className="block size-full text-left"
+                      >
+                        {content}
+                      </button>
+                    ) : (
+                      content
                     )}
-                    <span className="font-mono text-number">
-                      {cell.customers.toLocaleString('en-US')}
-                    </span>
                   </td>
                 );
               })}

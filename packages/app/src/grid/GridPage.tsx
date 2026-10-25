@@ -11,7 +11,9 @@ import { StatTiles } from './StatTiles';
 
 const count = (n: number) => n.toLocaleString('en-US');
 
-export function GridPage({ result, wallMs }: { result: DoneMessage; wallMs: number }) {
+type Props = { result: DoneMessage; wallMs: number; onOpenSegment(segmentId: string): void };
+
+export function GridPage({ result, wallMs, onOpenSegment }: Props) {
   return (
     <>
       <StatTiles
@@ -21,8 +23,8 @@ export function GridPage({ result, wallMs }: { result: DoneMessage; wallMs: numb
         analysisDate={result.analysisDate}
       />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
-        <Heatmap cells={result.grid} segments={defaultSegmentMap.segments} />
-        <SegmentPanel summary={result.segments} />
+        <Heatmap cells={result.grid} segments={defaultSegmentMap.segments} onOpen={onOpenSegment} />
+        <SegmentPanel summary={result.segments} onOpen={onOpenSegment} />
       </div>
       <section className="flex flex-col gap-1 text-small text-text-secondary">
         <p>

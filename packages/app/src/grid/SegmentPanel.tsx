@@ -6,7 +6,9 @@ const count = (n: number) => n.toLocaleString('en-US');
 const percent = (share: number) => `${(share * 100).toFixed(1)}%`;
 const number = 'px-1 py-2 text-right font-mono text-number sm:px-2';
 
-export function SegmentPanel({ summary }: { summary: SegmentsSummary }) {
+type Props = { summary: SegmentsSummary; onOpen?(segmentId: string): void };
+
+export function SegmentPanel({ summary, onOpen }: Props) {
   // Bars are drawn relative to the largest share so small segments stay visible; the exact
   // share is printed beside each bar.
   const largest = Math.max(0, ...summary.segments.map((s) => s.revenueShare));
@@ -40,7 +42,18 @@ export function SegmentPanel({ summary }: { summary: SegmentsSummary }) {
             return (
               <tr key={segment.id} data-segment={segment.id} className="border-b border-border">
                 <th scope="row" className="px-2 py-2 font-normal">
-                  {segment.name}
+                  {onOpen ? (
+                    <button
+                      type="button"
+                      aria-label={`Open ${segment.name}`}
+                      onClick={() => onOpen(segment.id)}
+                      className="rounded-control text-left underline-offset-4 enabled:hover:text-action-text enabled:hover:underline"
+                    >
+                      {segment.name}
+                    </button>
+                  ) : (
+                    segment.name
+                  )}
                 </th>
                 <td className="hidden px-2 py-2 sm:table-cell">
                   <span
