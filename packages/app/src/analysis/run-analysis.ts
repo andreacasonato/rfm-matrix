@@ -4,6 +4,7 @@ import {
   type CleaningRules,
   defaultScoring,
   defaultSegmentMap,
+  gridCells,
   score,
   summariseSegments,
 } from '@rfm-matrix/core';
@@ -38,7 +39,11 @@ export async function runAnalysis(
     const scores = score(customers, { scoring, ...(analysisDate ? { analysisDate } : {}) });
     const segmented = applySegments(scores.customers, defaultSegmentMap);
     let monetaryTotal = 0;
-    for (const customer of customers) monetaryTotal += customer.monetary;
+    let repeatCustomers = 0;
+    for (const customer of customers) {
+      monetaryTotal += customer.monetary;
+      if (customer.orderCount >= 2) repeatCustomers++;
+    }
     post({
       type: 'done',
       rowsRead: read.rowsRead,
@@ -52,6 +57,8 @@ export async function runAnalysis(
       problems: read.problems.slice(0, 10),
       analysisDate: scores.analysisDate.toISOString().slice(0, 10),
       segments: summariseSegments(segmented, defaultSegmentMap),
+      grid: gridCells(segmented, defaultSegmentMap),
+      repeatCustomers,
       elapsedMs: now() - started,
     });
   } catch (error) {

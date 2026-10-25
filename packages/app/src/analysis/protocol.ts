@@ -4,6 +4,7 @@ import type {
   CleaningCounts,
   CleaningRules,
   ColumnMapping,
+  GridCell,
   OrderProfile,
   ReadSettings,
   ScoringMethods,
@@ -51,6 +52,10 @@ export type DoneMessage = {
   /** UTC calendar date, YYYY-MM-DD (ADR-0010). */
   analysisDate: string;
   segments: SegmentsSummary;
+  /** The 25 R × F cells for the grid (S5), in display order. */
+  grid: GridCell[];
+  /** Customers with two or more orders. */
+  repeatCustomers: number;
   elapsedMs: number;
 };
 
