@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest';
 import { defaultExcludedStatuses, orderCounts } from './cleaning';
 import { cleaningRows, cleaningRules } from './fixtures/cleaning-orders';
 import type { OrderRow } from './index';
-import { OrderBook } from './orders';
+import { detachString, OrderBook } from './orders';
 
 const row = (customerKey: string, orderId: string, date: string, amount?: number): OrderRow => ({
   customerKey,
@@ -186,5 +186,14 @@ describe('OrderBook (properties)', () => {
         expect(customers.reduce((n, c) => n + c.orderCount, 0)).toBe(orders.used);
       }),
     );
+  });
+});
+
+describe('detachString', () => {
+  it('returns an equal string', () => {
+    const cell = `${'x'.repeat(100)}a@example.test${'y'.repeat(100)}`;
+    const email = cell.slice(100, 114);
+    expect(detachString(email)).toBe('a@example.test');
+    expect(detachString('')).toBe('');
   });
 });

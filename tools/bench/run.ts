@@ -23,6 +23,8 @@ const rows = Number(values.rows);
 const runs = Number(values.runs);
 const targets = rows >= 1_000_000 ? { p50: 30_000, p95: 60_000 } : { p50: 3_000, p95: 6_000 };
 const maxBlockMs = 100;
+// Regression guard: about 860 MB for 1M rows before S6's string-retention bug; it reached 1.5 GB.
+const maxMemoryMB = rows >= 1_000_000 ? 1200 : undefined;
 
 const csvPath = resolve(`bench-data/orders-${rows}.csv`);
 const expected = JSON.parse(readFileSync(`bench-data/orders-${rows}.expected.json`, 'utf8'));
@@ -154,6 +156,9 @@ const failures = [
   summary.longestMainThreadBlockMs > maxBlockMs &&
     `main thread blocked ${summary.longestMainThreadBlockMs} ms (limit ${maxBlockMs} ms)`,
   mismatches.length > 0 && `${mismatches.length} result mismatches`,
+  maxMemoryMB !== undefined &&
+    summary.peakBrowserMemoryMB > maxMemoryMB &&
+    `browser memory peaked at ${summary.peakBrowserMemoryMB} MB (limit ${maxMemoryMB} MB)`,
   cancelFailure,
 ].filter(Boolean);
 console.log(failures.length ? `FAIL: ${failures.join('; ')}` : 'PASS: all targets met');

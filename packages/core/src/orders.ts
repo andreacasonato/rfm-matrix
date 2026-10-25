@@ -14,6 +14,14 @@ import {
 import type { OrderRow } from './index';
 import { OrderColumns, type ValueField, valueFields } from './order-columns';
 
+/**
+ * Chrome's JavaScript engine (V8) often keeps a substring as a view into the text it was cut
+ * from, so storing one cell would keep its whole 4 MB slice of the file alive. Strings kept for
+ * every customer are copied first. Regression: emails kept this way raised peak memory for 1M
+ * rows from 863 MB to 1,496 MB (S6).
+ */
+export const detachString = (text: string) => ` ${text}`.slice(1);
+
 export type CustomerAggregate = {
   customerKey: string;
   orderCount: number;
@@ -53,11 +61,11 @@ export class OrderBook {
   add(row: OrderRow): void {
     let customer = this.customerIndex.get(row.customerKey);
     if (customer === undefined) {
-      customer = this.customerKeys.push(row.customerKey) - 1;
+      customer = this.customerKeys.push(detachString(row.customerKey)) - 1;
       this.customerIndex.set(row.customerKey, customer);
     }
     if (row.email && this.customerEmails[customer] === undefined) {
-      this.customerEmails[customer] = row.email;
+      this.customerEmails[customer] = detachString(row.email);
     }
     const key = `${customer}\u0000${row.orderId}`;
     let i = this.orderIndex.get(key);
