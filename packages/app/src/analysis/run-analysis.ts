@@ -2,6 +2,7 @@
 import {
   applySegments,
   type CleaningRules,
+  defaultScoring,
   defaultSegmentMap,
   score,
   summariseSegments,
@@ -33,7 +34,8 @@ export async function runAnalysis(
       onProgress: (progress) => post({ type: 'progress', ...progress }),
     });
     const { customers, counts, analysisDate } = read.book.finish(plan.cleaning ?? keepAll);
-    const scores = score(customers, analysisDate ? { analysisDate } : {});
+    const scoring = plan.scoring ?? defaultScoring;
+    const scores = score(customers, { scoring, ...(analysisDate ? { analysisDate } : {}) });
     const segmented = applySegments(scores.customers, defaultSegmentMap);
     let monetaryTotal = 0;
     for (const customer of customers) monetaryTotal += customer.monetary;
@@ -46,6 +48,7 @@ export async function runAnalysis(
       orders: counts.used,
       monetaryTotal,
       cleaning: counts,
+      scoring,
       problems: read.problems.slice(0, 10),
       analysisDate: scores.analysisDate.toISOString().slice(0, 10),
       segments: summariseSegments(segmented, defaultSegmentMap),

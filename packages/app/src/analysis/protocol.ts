@@ -6,6 +6,7 @@ import type {
   ColumnMapping,
   OrderProfile,
   ReadSettings,
+  ScoringMethods,
   SegmentsSummary,
 } from '@rfm-matrix/core';
 import type { CsvPreview, TextEncodingName, UnreadableKind } from '@rfm-matrix/io';
@@ -17,6 +18,8 @@ export type AnalysisPlan = {
   amountLevel: AmountLevel;
   /** Chosen on the cleaning screen; without it every order counts. */
   cleaning?: CleaningRules;
+  /** Chosen on the cleaning screen; without it the default methods apply (ADR-0004). */
+  scoring?: ScoringMethods;
 };
 
 /** How to read the file; missing fields are detected. */
@@ -43,6 +46,7 @@ export type DoneMessage = {
   orders: number;
   monetaryTotal: number;
   cleaning: CleaningCounts;
+  scoring: ScoringMethods;
   problems: { row: number; message: string }[];
   /** UTC calendar date, YYYY-MM-DD (ADR-0010). */
   analysisDate: string;

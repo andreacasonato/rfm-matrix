@@ -5,6 +5,7 @@ import { type JobHandle, startAnalysis } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { SegmentList } from '../SegmentList';
+import { describeScoring } from './describe-scoring';
 
 type Props = {
   label: string;
@@ -135,8 +136,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
           </output>
           <LeftOut counts={state.result.cleaning} />
           <p className="text-text-secondary">
-            Analysed as of {state.result.analysisDate}. Recency and monetary scores use quintiles
-            (as Excel's PERCENTILE.INC); frequency uses fixed breaks of 1, 2, 3, 4–5 and 6+ orders.
+            Analysed as of {state.result.analysisDate}. {describeScoring(state.result.scoring)}
           </p>
           <SegmentList summary={state.result.segments} />
         </>
