@@ -63,8 +63,15 @@ export {
   presets,
   validateMapping,
 } from './presets';
-export type { BinSizes, ScoredCustomer, ScoreResult } from './score';
-export { NotEnoughCustomersError, score } from './score';
+export type {
+  BinSizes,
+  Dimension,
+  DimensionMethod,
+  ScoredCustomer,
+  ScoreResult,
+  ScoringMethods,
+} from './score';
+export { defaultScoring, NotEnoughCustomersError, score, validateBreaks } from './score';
 export type { Segment, SegmentMap, ValidationResult } from './segments';
 export { applySegments, cellIndex, defaultSegmentMap, segmentFor, validateMap } from './segments';
 export type { SegmentSummary, SegmentsSummary } from './summary';
