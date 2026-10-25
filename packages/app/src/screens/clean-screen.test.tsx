@@ -1,4 +1,6 @@
 // @vitest-environment jsdom
+
+import { defaultScoring } from '@rfm-matrix/core';
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisPlan, FileSummary, SummaryDoneMessage } from '../analysis/protocol';
@@ -98,6 +100,7 @@ describe('CleanScreen (story 3)', () => {
         subtractRefunds: true,
         lookbackDays: 730,
       },
+      scoring: defaultScoring,
     });
   });
 
@@ -111,5 +114,44 @@ describe('CleanScreen (story 3)', () => {
     await renderClean();
     fireEvent.click(screen.getByLabelText(/paid · 8 orders/));
     expect(screen.getByRole('status').textContent).toContain('More than half');
+  });
+});
+
+describe('CleanScreen scoring (S4, TRD §8 rules 5–7)', () => {
+  const run = () => screen.getByRole('button', { name: 'Run analysis' });
+
+  it('lets frequency switch to quintiles', async () => {
+    const onRun = await renderClean();
+    fireEvent.change(screen.getByLabelText('Frequency scoring'), { target: { value: 'quantile' } });
+    fireEvent.click(run());
+    expect(onRun.mock.calls[0]?.[0].scoring.f).toEqual({ method: 'quantile' });
+  });
+
+  it('offers fixed recency cut points pre-filled with 30, 60, 90 and 180 days', async () => {
+    const onRun = await renderClean();
+    fireEvent.change(screen.getByLabelText('Recency scoring'), { target: { value: 'fixed' } });
+    expect(screen.getByLabelText('Recency cut point 1')).toHaveProperty('value', '30');
+    fireEvent.click(run());
+    expect(onRun.mock.calls[0]?.[0].scoring.r).toEqual({
+      method: 'fixed',
+      breaks: [30, 60, 90, 180],
+    });
+  });
+
+  it('blocks the run until fixed monetary cut points are filled in correctly', async () => {
+    const onRun = await renderClean();
+    fireEvent.change(screen.getByLabelText('Monetary scoring'), { target: { value: 'fixed' } });
+    expect(run()).toHaveProperty('disabled', true);
+    for (const [i, value] of ['50', '200', '100', '1000'].entries()) {
+      fireEvent.change(screen.getByLabelText(`Monetary cut point ${i + 1}`), { target: { value } });
+    }
+    expect(screen.getByText('Each cut point must be larger than the one before.')).toBeTruthy();
+    expect(run()).toHaveProperty('disabled', true);
+    fireEvent.change(screen.getByLabelText('Monetary cut point 3'), { target: { value: '500' } });
+    fireEvent.click(run());
+    expect(onRun.mock.calls[0]?.[0].scoring.m).toEqual({
+      method: 'fixed',
+      breaks: [50, 200, 500, 1000],
+    });
   });
 });

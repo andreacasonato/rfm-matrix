@@ -8,6 +8,12 @@ import { Notice } from '../components/Notice';
 import { defaultCleaning } from '../mapping/default-cleaning';
 import { type Choices, CleaningOptions } from './CleaningOptions';
 import { ExclusionCounts } from './ExclusionCounts';
+import {
+  defaultScoringChoices,
+  type ScoringChoices,
+  ScoringOptions,
+  scoringFrom,
+} from './ScoringOptions';
 
 type Props = {
   fileName: string;
@@ -53,6 +59,7 @@ export function CleanScreen(props: Props) {
   const { fileName, file, plan, format, onBack, onRun, summarise = startSummary } = props;
   const [load, setLoad] = useState<Load>({ status: 'reading', rowsRead: 0 });
   const [choices, setChoices] = useState<Choices | undefined>();
+  const [scoring, setScoring] = useState<ScoringChoices>(defaultScoringChoices);
 
   useEffect(() => {
     const job = summarise(file, plan, format, ({ rowsRead }) =>
@@ -82,6 +89,7 @@ export function CleanScreen(props: Props) {
   const summary = load.status === 'ready' ? load.summary : undefined;
   const rules = choices && rulesFrom(choices);
   const counts = summary && rules ? orderCounts(summary.profile, rules) : undefined;
+  const { methods } = scoringFrom(scoring);
 
   return (
     <>
@@ -115,14 +123,17 @@ export function CleanScreen(props: Props) {
             choices={choices}
             onChange={setChoices}
           />
+          <ScoringOptions choices={scoring} onChange={setScoring} />
           {counts && (
             <ExclusionCounts counts={counts} unreadableRows={summary.rowsRead - summary.rowsUsed} />
           )}
           <div>
             <Button
               variant="primary"
-              disabled={!rules || !counts || counts.used === 0}
-              onClick={() => rules && onRun({ ...plan, cleaning: rules })}
+              disabled={!rules || !methods || !counts || counts.used === 0}
+              onClick={() =>
+                rules && methods && onRun({ ...plan, cleaning: rules, scoring: methods })
+              }
             >
               Run analysis
             </Button>
