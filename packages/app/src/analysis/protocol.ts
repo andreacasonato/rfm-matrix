@@ -4,6 +4,7 @@ import type {
   CleaningCounts,
   CleaningRules,
   ColumnMapping,
+  OrderProfile,
   ReadSettings,
   SegmentsSummary,
 } from '@rfm-matrix/core';
@@ -23,7 +24,8 @@ export type CsvFormat = { encoding?: TextEncodingName; delimiter?: string };
 
 export type StartMessage = { type: 'start'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
 export type PreviewRequest = { type: 'preview'; file: Blob; format: CsvFormat };
-export type WorkerRequest = StartMessage | PreviewRequest;
+export type SummaryRequest = { type: 'summary'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
+export type WorkerRequest = StartMessage | PreviewRequest | SummaryRequest;
 
 export type ProgressMessage = {
   type: 'progress';
@@ -55,6 +57,21 @@ export type PreviewProgressMessage = {
 };
 export type PreviewDoneMessage = { type: 'preview-done'; preview: CsvPreview };
 
+/** What the cleaning screen needs: orders by status and day, and how many rows were usable. */
+export type FileSummary = {
+  profile: OrderProfile;
+  rowsRead: number;
+  rowsUsed: number;
+  customers: number;
+};
+export type SummaryProgressMessage = {
+  type: 'summary-progress';
+  rowsRead: number;
+  bytesRead: number;
+  customers: number;
+};
+export type SummaryDoneMessage = { type: 'summary-done'; summary: FileSummary };
+
 export type ErrorMessage = { type: 'error'; message: string; unreadable?: UnreadableKind };
 
 export type WorkerMessage =
@@ -62,4 +79,6 @@ export type WorkerMessage =
   | DoneMessage
   | PreviewProgressMessage
   | PreviewDoneMessage
+  | SummaryProgressMessage
+  | SummaryDoneMessage
   | ErrorMessage;

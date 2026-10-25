@@ -2,6 +2,7 @@
 import type { WorkerMessage, WorkerRequest } from './protocol';
 import { runAnalysis } from './run-analysis';
 import { runPreview } from './run-preview';
+import { runSummary } from './run-summary';
 
 // The app compiles with the DOM library, so describe the worker scope we use here.
 const scope = self as unknown as {
@@ -13,5 +14,7 @@ scope.onmessage = (event) => {
   const request = event.data;
   const post = (message: WorkerMessage) => scope.postMessage(message);
   if (request.type === 'preview') void runPreview(request.file, request.format, post);
-  else void runAnalysis(request.file, request.plan, post, { format: request.format });
+  else if (request.type === 'summary') {
+    void runSummary(request.file, request.plan, request.format, post);
+  } else void runAnalysis(request.file, request.plan, post, { format: request.format });
 };

@@ -47,6 +47,7 @@ export {
   isExcludedByDefault,
   normaliseStatus,
   orderCounts,
+  statusCounts,
 } from './cleaning';
 export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';

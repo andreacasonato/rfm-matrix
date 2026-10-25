@@ -7,6 +7,8 @@ import type {
   PreviewDoneMessage,
   PreviewProgressMessage,
   ProgressMessage,
+  SummaryDoneMessage,
+  SummaryProgressMessage,
   WorkerMessage,
   WorkerRequest,
 } from './protocol';
@@ -79,5 +81,18 @@ export const startPreview = (
     { type: 'preview', file, format },
     'preview-done',
     'preview-progress',
+    onProgress,
+  );
+
+export const startSummary = (
+  file: Blob,
+  plan: AnalysisPlan,
+  format: CsvFormat,
+  onProgress: (progress: SummaryProgressMessage) => void,
+) =>
+  startJob<SummaryDoneMessage, SummaryProgressMessage>(
+    { type: 'summary', file, plan, format },
+    'summary-done',
+    'summary-progress',
     onProgress,
   );

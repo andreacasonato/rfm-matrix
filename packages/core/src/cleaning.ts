@@ -85,3 +85,14 @@ export function orderCounts(profile: OrderProfile, rules: CleaningRules): OrderC
   }
   return counts;
 }
+
+/** Orders per status across all days, most orders first: the cleaning screen's checkboxes. */
+export function statusCounts(profile: OrderProfile): { status: string; orders: number }[] {
+  const totals = new Map<string, number>();
+  for (const group of profile.groups) {
+    totals.set(group.status, (totals.get(group.status) ?? 0) + group.orders);
+  }
+  return [...totals]
+    .map(([status, orders]) => ({ status, orders }))
+    .sort((a, b) => b.orders - a.orders);
+}

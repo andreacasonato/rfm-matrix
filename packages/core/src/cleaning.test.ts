@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { defaultExcludedStatuses, isExcludedByDefault, normaliseStatus } from './cleaning';
+import {
+  defaultExcludedStatuses,
+  isExcludedByDefault,
+  normaliseStatus,
+  statusCounts,
+} from './cleaning';
 
 describe('statuses (ADR-0013 rule 2)', () => {
   it('normalises case, spaces and underscores', () => {
@@ -35,6 +40,26 @@ describe('statuses (ADR-0013 rule 2)', () => {
     expect(defaultExcludedStatuses(['Paid', 'Cancelled', 'refunded', 'Refunded'])).toEqual([
       'cancelled',
       'refunded',
+    ]);
+  });
+});
+
+describe('statusCounts', () => {
+  it('adds up orders per status across days, most orders first', () => {
+    const profile = {
+      groups: [
+        { status: 'paid', day: 1, orders: 3 },
+        { status: 'cancelled', day: 1, orders: 4 },
+        { status: 'paid', day: 2, orders: 2 },
+        { status: '', day: null, orders: 1 },
+      ],
+      refunds: 0,
+      latestDay: 2,
+    };
+    expect(statusCounts(profile)).toEqual([
+      { status: 'paid', orders: 5 },
+      { status: 'cancelled', orders: 4 },
+      { status: '', orders: 1 },
     ]);
   });
 });
