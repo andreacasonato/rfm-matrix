@@ -58,6 +58,18 @@ describe('OrderBook grouping (TRD §8 rules 1, 3, 4; ADR-0012)', () => {
     expect(a).toMatchObject({ orderCount: 1, monetary: 5 });
   });
 
+  it('keeps the first email seen for each customer', () => {
+    const rows = [
+      { ...row('a', '#1', '2026-01-05', 1) },
+      { ...row('a', '#2', '2026-01-06', 1), email: 'a@example.test' },
+      { ...row('a', '#3', '2026-01-07', 1), email: 'other@example.test' },
+      row('b', '#4', '2026-01-08', 1),
+    ];
+    const [a, b] = book(rows).finish(keepAll).customers;
+    expect(a?.email).toBe('a@example.test');
+    expect(b).not.toHaveProperty('email');
+  });
+
   it('defaults the analysis date to the day after the latest order', () => {
     const result = book([row('a', '#1', '2026-01-05', 1)]).finish(keepAll);
     expect(result.analysisDate).toEqual(new Date('2026-01-06T00:00:00Z'));

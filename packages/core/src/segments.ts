@@ -1,8 +1,15 @@
 // The segment map: which segment each of the 125 R × F × M score combinations belongs to.
 import type { CustomerScore, Score } from './index';
 import type { ScoredCustomer } from './score';
+import { segmentTexts } from './segment-texts';
 
-export type Segment = { id: string; name: string; sortOrder: number };
+export type Segment = {
+  id: string;
+  name: string;
+  description: string;
+  suggestedAction: string;
+  sortOrder: number;
+};
 
 /** `cells[cellIndex(r, f, m)]` is the segment ID for that combination of scores. */
 export type SegmentMap = { segments: Segment[]; cells: string[] };
@@ -28,7 +35,13 @@ const segments: Segment[] = [
   ['cant-lose-them', "Can't lose them"],
   ['hibernating', 'Hibernating'],
   ['lost', 'Lost'],
-].map(([id, name], sortOrder) => ({ id: id ?? '', name: name ?? '', sortOrder }));
+].map(([id = '', name = ''], sortOrder) => ({
+  id,
+  name,
+  description: segmentTexts[id]?.description ?? '',
+  suggestedAction: segmentTexts[id]?.suggestedAction ?? '',
+  sortOrder,
+}));
 
 // SCHEMA.md "Default segment map": rows R5 to R1, columns F1 to F5. Every M score shares a cell.
 const byRecencyAndFrequency: Record<Score, string[]> = {

@@ -13,7 +13,15 @@ describe('toOrderRow', () => {
       orderedAt: new Date(Date.UTC(2026, 0, 5, 10)),
       amount: 19.9,
       status: 'paid',
+      email: 'A@Example.test',
     });
+  });
+
+  it('keeps the mapped email, as written, for display and export', () => {
+    const cells = ['42', ' A@Example.test ', '#1', '2026-01-05', '1', ''];
+    expect(toOrderRow(cells, mapping, settings)?.email).toBe('A@Example.test');
+    const { email: _e, ...noEmail } = mapping;
+    expect(toOrderRow(cells, noEmail, settings)).not.toHaveProperty('email');
   });
 
   it('falls back to the lower-cased email when the row has no customer ID (SCHEMA.md)', () => {

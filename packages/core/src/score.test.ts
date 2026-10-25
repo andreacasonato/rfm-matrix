@@ -55,6 +55,13 @@ describe('score', () => {
     }
   });
 
+  it('carries each customer’s email through to the scores', () => {
+    const withEmail = five.map((c, i) => (i === 0 ? { ...c, email: 'a@example.test' } : c));
+    const [first, second] = score(withEmail).customers;
+    expect(first?.email).toBe('a@example.test');
+    expect(second).not.toHaveProperty('email');
+  });
+
   it('blocks scoring with fewer than 5 customers (TRD §11)', () => {
     expect(() => score(five.slice(0, 4))).toThrow(NotEnoughCustomersError);
     expect(() => score(five.slice(0, 4))).toThrow('at least 5 customers');

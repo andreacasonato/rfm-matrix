@@ -20,6 +20,7 @@ export type CustomerAggregate = {
   monetary: number;
   firstOrderAt: Date;
   lastOrderAt: Date;
+  email?: string;
 };
 
 /** `order`: first non-empty value per order; `line`: add up every row (ADR-0012). */
@@ -35,6 +36,7 @@ export class OrderBook {
   private readonly orderIndex = new Map<string, number>();
   private readonly customerIndex = new Map<string, number>();
   private readonly customerKeys: string[] = [];
+  private readonly customerEmails: (string | undefined)[] = [];
   private readonly statusIndex = new Map<string, number>();
   private readonly statuses: string[] = [];
   private readonly columns = new OrderColumns();
@@ -53,6 +55,9 @@ export class OrderBook {
     if (customer === undefined) {
       customer = this.customerKeys.push(row.customerKey) - 1;
       this.customerIndex.set(row.customerKey, customer);
+    }
+    if (row.email && this.customerEmails[customer] === undefined) {
+      this.customerEmails[customer] = row.email;
     }
     const key = `${customer}\u0000${row.orderId}`;
     let i = this.orderIndex.get(key);
@@ -180,12 +185,14 @@ export class OrderBook {
         counts.customersWithoutOrders++;
         continue;
       }
+      const email = this.customerEmails[c];
       customers.push({
         customerKey: this.customerKeys[c] ?? '',
         orderCount: orderCount[c] ?? 0,
         monetary: monetary[c] ?? 0,
         firstOrderAt: new Date(first[c] ?? 0),
         lastOrderAt: new Date(last[c] ?? 0),
+        ...(email ? { email } : {}),
       });
     }
     const analysisDate = analysisDay === undefined ? undefined : new Date(analysisDay * dayMs);
