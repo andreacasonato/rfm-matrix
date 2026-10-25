@@ -18,6 +18,7 @@ consequences, governance, notes.
 | [0010](0010-percentiles-and-days.md) | Percentile method and day counting | Accepted |
 | [0011](0011-ui-dependencies-and-csv-only.md) | UI dependencies, CSV-only import, no router | Accepted |
 | [0012](0012-column-mapping-rules.md) | Column mapping: amounts, dates, customer keys, presets | Accepted |
+| [0013](0013-cleaning-and-refunds.md) | Cleaning rules, refunds, net amounts, analysis window | Accepted |
 
 ## Template
 
