@@ -1,4 +1,5 @@
-// The worker's analysis job, kept free of worker globals so it can be tested in Node.
+// The worker's analysis job, kept free of worker globals so it can be tested in Node. It posts
+// the result and returns every scored customer for the worker to keep.
 import {
   applySegments,
   type CleaningRules,
@@ -8,6 +9,7 @@ import {
   score,
   summariseSegments,
 } from '@rfm-matrix/core';
+import { buildCustomerTable, type CustomerTable } from '../segment/customer-table';
 import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 import { readOrders } from './read-orders';
 
@@ -25,7 +27,7 @@ export async function runAnalysis(
   plan: AnalysisPlan,
   post: (message: WorkerMessage) => void,
   { now = () => performance.now(), chunkSize, format = {} }: Options = {},
-): Promise<void> {
+): Promise<CustomerTable | undefined> {
   const started = now();
   try {
     const read = await readOrders(source, plan, {
@@ -61,7 +63,10 @@ export async function runAnalysis(
       repeatCustomers,
       elapsedMs: now() - started,
     });
+    // Kept by the worker for segment detail and export, never sent to the page whole (S6).
+    return buildCustomerTable(segmented, plan.mapping.email !== undefined);
   } catch (error) {
     post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+    return undefined;
   }
 }

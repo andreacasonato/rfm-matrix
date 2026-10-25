@@ -14,6 +14,7 @@ function fakeAnalysis() {
       reject = fail;
     }),
     cancel,
+    session: { segmentPage: vi.fn(), exportSegment: vi.fn() },
   }));
   return { analyse, cancel, fail: (error: Error) => reject(error) };
 }
