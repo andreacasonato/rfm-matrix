@@ -13,6 +13,9 @@ type Props = {
   /** Saved on this device, newest first (S8). */
   projects?: ProjectSummary[];
   onOpenProject?(projectId: string): void;
+  onProjectData?(): void;
+  /** A confirmation to show, e.g. after Delete all data. */
+  notice?: string;
 };
 
 export function StartScreen({
@@ -21,9 +24,12 @@ export function StartScreen({
   storage,
   projects = [],
   onOpenProject,
+  onProjectData,
+  notice,
 }: Props) {
   return (
     <>
+      {notice && <Notice tone="info" title={notice} />}
       <section className="flex flex-col gap-4 rounded-panel border border-border bg-surface p-6">
         <h1 className="text-title font-semibold">
           See who your best, slipping and lost customers are
@@ -70,6 +76,13 @@ export function StartScreen({
             ))}
           </ul>
         </section>
+      )}
+      {storage === 'available' && onProjectData && (
+        <div>
+          <Button variant="quiet" onClick={onProjectData}>
+            Project and data
+          </Button>
+        </div>
       )}
       {storage === 'unavailable' && (
         <Notice tone="warning" title="This browser is not letting the app store data">

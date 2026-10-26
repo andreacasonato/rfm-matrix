@@ -5,6 +5,7 @@ import { useEffect, useState } from 'react';
 import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
 import { startPreview, startSummary } from './analysis/worker-client';
 import { Page } from './components/Page';
+import { ProjectDataScreen } from './data/ProjectDataScreen';
 import { defaultCleaning } from './mapping/default-cleaning';
 import { initialPlan } from './mapping/initial-plan';
 import type { ProjectContext } from './screens/AnalysisView';
@@ -18,7 +19,8 @@ import { useSavedProjects } from './storage/use-saved-projects';
 import { probeStorage, type StorageState } from './storage-probe';
 
 type Screen =
-  | { name: 'start' }
+  | { name: 'start'; notice?: string }
+  | { name: 'data' }
   | { name: 'upload' }
   | { name: 'map'; file: File; preview: CsvPreview }
   | { name: 'clean'; file: File; preview: CsvPreview; plan: AnalysisPlan; format: CsvFormat }
@@ -79,6 +81,16 @@ export function App() {
           }
           projects={projects}
           onOpenProject={(id) => void openProject(id)}
+          onProjectData={() => setScreen({ name: 'data' })}
+          {...(screen.notice ? { notice: screen.notice } : {})}
+        />
+      )}
+      {screen.name === 'data' && (
+        <ProjectDataScreen
+          onBack={start}
+          onDeleted={() =>
+            setScreen({ name: 'start', notice: 'All data on this device was deleted.' })
+          }
         />
       )}
       {screen.name === 'upload' && (

@@ -62,4 +62,22 @@ describe('StartScreen', () => {
     );
     expect(screen.queryByRole('list')).toBeNull();
   });
+
+  it('leads to Project and data when the browser keeps data', () => {
+    const onProjectData = vi.fn();
+    render(
+      <StartScreen
+        onUpload={() => {}}
+        onTrySample={() => {}}
+        storage="available"
+        onProjectData={onProjectData}
+        notice="All data on this device was deleted."
+      />,
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Project and data' }));
+    expect(onProjectData).toHaveBeenCalledOnce();
+    expect(screen.getByRole('status').textContent).toContain(
+      'All data on this device was deleted.',
+    );
+  });
 });

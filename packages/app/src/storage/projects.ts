@@ -1,6 +1,6 @@
 // The projects saved on this device, read from the page (Start, Project and data) (S8).
 import type { SegmentMap } from '@rfm-matrix/core';
-import { openDb } from './db';
+import { dbExists, openDb } from './db';
 import type { ProjectRecord, SegmentMapRecord, SnapshotRecord } from './schema';
 
 export type SnapshotSummary = Pick<
@@ -44,6 +44,7 @@ async function snapshotsOf(db: Awaited<ReturnType<typeof openDb>>, projectId: st
 
 /** Newest first. */
 export async function listProjects(): Promise<ProjectSummary[]> {
+  if (!(await dbExists())) return [];
   const db = await openDb();
   try {
     const projects = (await db.getAllFromIndex('projects', 'updatedAt')).reverse();
@@ -75,6 +76,13 @@ export async function loadProject(id: string): Promise<LoadedProject | undefined
   } finally {
     db.close();
   }
+}
+
+/** Every project with its rules and snapshots, newest first (Project and data). */
+export async function loadAllProjects(): Promise<LoadedProject[]> {
+  const projects = await listProjects();
+  const loaded = await Promise.all(projects.map((p) => loadProject(p.id)));
+  return loaded.filter((p): p is LoadedProject => p !== undefined);
 }
 
 /** Keeps edited rules for the project's next analyses; saved snapshots keep their own. */

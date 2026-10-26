@@ -1,6 +1,6 @@
 import type { ButtonHTMLAttributes, ReactNode } from 'react';
 
-type Variant = 'primary' | 'secondary' | 'quiet';
+type Variant = 'primary' | 'secondary' | 'quiet' | 'danger';
 
 type Props = ButtonHTMLAttributes<HTMLButtonElement> & {
   variant?: Variant;
@@ -21,6 +21,9 @@ const variants: Record<Variant, string> = {
     'border border-border bg-surface text-text-primary enabled:hover:bg-canvas enabled:active:brightness-95',
   quiet:
     'px-2 text-action-text underline-offset-4 enabled:hover:underline enabled:active:brightness-90',
+  // Destructive actions only (Delete); red is a status colour (DESIGN.md).
+  danger:
+    'border border-negative bg-surface text-negative enabled:hover:bg-negative-tint enabled:active:brightness-95',
 };
 
 export function Button({
