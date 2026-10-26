@@ -4,3 +4,10 @@ packages:
 # ADR-0006: exact versions only, and nothing published less than 14 days ago.
 savePrefix: ''
 minimumReleaseAge: 20160
+
+# ADR-0016: undici 8.12.2 fixes three advisories in the copy jsdom uses for tests. It is newer
+# than 14 days, so it is exempted as a security fix approved by the maintainer.
+overrides:
+  undici: 8.12.2
+minimumReleaseAgeExclude:
+  - undici@8.12.2

@@ -22,6 +22,8 @@ jobs:
           node-version-file: .nvmrc
           cache: pnpm
       - run: pnpm install --frozen-lockfile
+      # Dependency scan (ADR-0016): fails on any known advisory, in app or tooling packages.
+      - run: pnpm audit
       - run: pnpm lint
       - run: pnpm typecheck
       - run: pnpm test
