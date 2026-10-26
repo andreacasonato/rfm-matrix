@@ -1,4 +1,5 @@
 // Runs one job in a fresh worker from the page. Cancel stops the worker immediately.
+import type { SegmentMap, SegmentsSummary } from '@rfm-matrix/core';
 import type { SegmentPage, Sort } from '../segment/customer-table';
 import type {
   AnalysisPlan,
@@ -33,6 +34,7 @@ export class WorkerJobError extends Error {
 export type AnalysisSession = {
   segmentPage(segmentId: string, sort: Sort, page: number, pageSize: number): Promise<SegmentPage>;
   exportSegment(segmentId: string, segmentName: string): Promise<{ file: Blob; rows: number }>;
+  applyMap(map: SegmentMap): Promise<SegmentsSummary>;
 };
 
 type Pending = { resolve(reply: SessionReply): void; reject(error: Error): void };
@@ -131,6 +133,11 @@ export function startAnalysis(
       const reply = await job.ask({ type: 'export', segmentId, segmentName });
       if (reply.type !== 'export-done') throw new WorkerJobError('Unexpected reply');
       return { file: reply.file, rows: reply.rows };
+    },
+    async applyMap(map) {
+      const reply = await job.ask({ type: 'apply-map', map });
+      if (reply.type !== 'map-applied') throw new WorkerJobError('Unexpected reply');
+      return reply.segments;
     },
   };
   return { result: job.result, cancel: job.cancel, session };

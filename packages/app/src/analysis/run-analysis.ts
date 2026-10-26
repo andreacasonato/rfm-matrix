@@ -10,6 +10,7 @@ import {
   summariseSegments,
 } from '@rfm-matrix/core';
 import { buildCustomerTable, type CustomerTable } from '../segment/customer-table';
+import { cellCustomers } from '../segment/resegment';
 import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 import { readOrders } from './read-orders';
 import { errorMessage } from './worker-error';
@@ -47,6 +48,7 @@ export async function runAnalysis(
       monetaryTotal += customer.monetary;
       if (customer.orderCount >= 2) repeatCustomers++;
     }
+    const table = buildCustomerTable(segmented, plan.mapping.email !== undefined);
     post({
       type: 'done',
       rowsRead: read.rowsRead,
@@ -61,11 +63,12 @@ export async function runAnalysis(
       analysisDate: scores.analysisDate.toISOString().slice(0, 10),
       segments: summariseSegments(segmented, defaultSegmentMap),
       grid: gridCells(segmented, defaultSegmentMap),
+      cellCustomers: cellCustomers(table),
       repeatCustomers,
       elapsedMs: now() - started,
     });
     // Kept by the worker for segment detail and export, never sent to the page whole (S6).
-    return buildCustomerTable(segmented, plan.mapping.email !== undefined);
+    return table;
   } catch (error) {
     post(errorMessage(error));
     return undefined;

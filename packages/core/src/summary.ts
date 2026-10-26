@@ -18,15 +18,26 @@ export type SegmentsSummary = {
 
 const share = (part: number, whole: number) => (whole === 0 ? 0 : part / whole);
 
+export type SegmentTotals = Map<string, { customers: number; revenue: number }>;
+
 export function summariseSegments(customers: CustomerScore[], map: SegmentMap): SegmentsSummary {
-  const counts = new Map<string, { customers: number; revenue: number }>();
-  let revenue = 0;
+  const counts: SegmentTotals = new Map();
   for (const c of customers) {
     const entry = counts.get(c.segmentId) ?? { customers: 0, revenue: 0 };
     entry.customers++;
     entry.revenue += c.monetary;
     counts.set(c.segmentId, entry);
-    revenue += c.monetary;
+  }
+  return summariseTotals(counts, map);
+}
+
+/** The summary from totals already added up per segment, e.g. by the worker's table (S7). */
+export function summariseTotals(counts: SegmentTotals, map: SegmentMap): SegmentsSummary {
+  let customers = 0;
+  let revenue = 0;
+  for (const entry of counts.values()) {
+    customers += entry.customers;
+    revenue += entry.revenue;
   }
   const segments = [...map.segments]
     .sort((a, b) => a.sortOrder - b.sortOrder)
@@ -37,9 +48,9 @@ export function summariseSegments(customers: CustomerScore[], map: SegmentMap): 
         name: segment.name,
         customers: entry.customers,
         revenue: entry.revenue,
-        customerShare: share(entry.customers, customers.length),
+        customerShare: share(entry.customers, customers),
         revenueShare: share(entry.revenue, revenue),
       };
     });
-  return { segments, totals: { customers: customers.length, revenue } };
+  return { segments, totals: { customers, revenue } };
 }

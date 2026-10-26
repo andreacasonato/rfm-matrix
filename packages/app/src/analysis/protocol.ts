@@ -8,6 +8,7 @@ import type {
   OrderProfile,
   ReadSettings,
   ScoringMethods,
+  SegmentMap,
   SegmentsSummary,
 } from '@rfm-matrix/core';
 import type { CsvPreview, TextEncodingName, UnreadableKind } from '@rfm-matrix/io';
@@ -40,7 +41,9 @@ export type SessionRequest =
       page: number;
       pageSize: number;
     }
-  | { type: 'export'; requestId: number; segmentId: string; segmentName: string };
+  | { type: 'export'; requestId: number; segmentId: string; segmentName: string }
+  /** Re-assigns every customer with an edited map (S7). */
+  | { type: 'apply-map'; requestId: number; map: SegmentMap };
 export type WorkerRequest = StartMessage | PreviewRequest | SummaryRequest | SessionRequest;
 
 export type ProgressMessage = {
@@ -66,6 +69,8 @@ export type DoneMessage = {
   segments: SegmentsSummary;
   /** The 25 R × F cells for the grid (S5), in display order. */
   grid: GridCell[];
+  /** Customers in each of the 125 R × F × M cells, by `cellIndex` (S7). */
+  cellCustomers: number[];
   /** Customers with two or more orders. */
   repeatCustomers: number;
   elapsedMs: number;
@@ -107,6 +112,7 @@ export type ErrorMessage = {
 export type SessionReply =
   | { type: 'segment-page-done'; requestId: number; page: SegmentPage }
   | { type: 'export-done'; requestId: number; file: Blob; rows: number }
+  | { type: 'map-applied'; requestId: number; segments: SegmentsSummary }
   | ErrorMessage;
 
 export type WorkerMessage =
