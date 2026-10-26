@@ -1,11 +1,13 @@
 // Processing, then the finished analysis (AnalysisView), or why it stopped.
+
+import type { SegmentMap } from '@rfm-matrix/core';
 import { useEffect, useRef, useState } from 'react';
-import { type AnalysisHandle, startAnalysis } from '../analysis/analysis-client';
+import { type AnalysisHandle, openSnapshot, startAnalysis } from '../analysis/analysis-client';
 import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
 import { WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
-import { AnalysisView } from './AnalysisView';
+import { AnalysisView, type ProjectContext } from './AnalysisView';
 import { describeReadFailure } from './unreadable';
 
 type Props = {
@@ -13,10 +15,16 @@ type Props = {
   /** The file plus how to read it, loaded when the screen opens. */
   load(): Promise<AnalysisInput>;
   onStartOver(): void;
+  /** The project this analysis is saved in or opened from (S8); none for the sample. */
+  project?: ProjectContext;
   analyse?: typeof startAnalysis;
+  open?: typeof openSnapshot;
 };
 
-export type AnalysisInput = { source: Blob; plan: AnalysisPlan; format: CsvFormat };
+/** A file to read, or a saved snapshot to open (S8). */
+export type AnalysisInput =
+  | { source: Blob; plan: AnalysisPlan; format: CsvFormat }
+  | { snapshotId: string; map: SegmentMap; hasEmail: boolean };
 
 type State =
   | { status: 'running'; progress?: ProgressMessage }
@@ -36,7 +44,14 @@ function failure(error: Error, rowsRead: number): State {
   return { status: 'error', title: 'Something went wrong', message: error.message };
 }
 
-export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysis }: Props) {
+export function ResultsScreen({
+  label,
+  load,
+  onStartOver,
+  project,
+  analyse = startAnalysis,
+  open = openSnapshot,
+}: Props) {
   const [state, setState] = useState<State>({ status: 'running' });
   const job = useRef<AnalysisHandle | null>(null);
 
@@ -44,13 +59,23 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
     let stopped = false;
     const started = performance.now();
     load().then(
-      ({ source, plan, format }) => {
+      (input) => {
         if (stopped) return;
         let rowsRead = 0;
-        const current = analyse(source, plan, format, (progress) => {
+        const onProgress = (progress: ProgressMessage) => {
           rowsRead = progress.rowsRead;
           setState({ status: 'running', progress });
-        });
+        };
+        const current =
+          'snapshotId' in input
+            ? open(input.snapshotId, input.map, onProgress)
+            : analyse(input.source, input.plan, input.format, onProgress);
+        // The list shows an Email column only when it differs from the customer key; the
+        // export keeps it whenever email is mapped, since email tools look for it.
+        const hasEmail =
+          'snapshotId' in input
+            ? input.hasEmail
+            : input.plan.mapping.email !== undefined && input.plan.mapping.customerId !== undefined;
         job.current = current;
         current.result.then(
           (result) =>
@@ -58,9 +83,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
               status: 'done',
               result,
               wallMs: performance.now() - started,
-              // The list shows an Email column only when it differs from the customer key; the
-              // export keeps it whenever email is mapped, since email tools look for it.
-              hasEmail: plan.mapping.email !== undefined && plan.mapping.customerId !== undefined,
+              hasEmail,
             }),
           (error: Error) => {
             // Cancel rejects the job too; the cancel button has already updated the screen.
@@ -74,7 +97,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
       stopped = true;
       job.current?.cancel();
     };
-  }, [load, analyse]);
+  }, [load, analyse, open]);
 
   function cancel() {
     job.current?.cancel();
@@ -126,6 +149,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
           wallMs={state.wallMs}
           hasEmail={state.hasEmail}
           handle={job.current}
+          {...(project ? { project } : {})}
         />
       )}
     </>

@@ -1,11 +1,27 @@
 import { Upload } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
+import type { ProjectSummary } from '../storage/projects';
 import type { StorageState } from '../storage-probe';
+import { formatDay } from './format';
+import { plural } from './plural';
 
-type Props = { onUpload(): void; onTrySample(): void; storage: StorageState };
+type Props = {
+  onUpload(): void;
+  onTrySample(): void;
+  storage: StorageState;
+  /** Saved on this device, newest first (S8). */
+  projects?: ProjectSummary[];
+  onOpenProject?(projectId: string): void;
+};
 
-export function StartScreen({ onUpload, onTrySample, storage }: Props) {
+export function StartScreen({
+  onUpload,
+  onTrySample,
+  storage,
+  projects = [],
+  onOpenProject,
+}: Props) {
   return (
     <>
       <section className="flex flex-col gap-4 rounded-panel border border-border bg-surface p-6">
@@ -23,6 +39,38 @@ export function StartScreen({ onUpload, onTrySample, storage }: Props) {
           <Button onClick={onTrySample}>Try sample data</Button>
         </div>
       </section>
+      {projects.length > 0 && (
+        <section className="flex flex-col gap-3 rounded-panel border border-border bg-surface p-6">
+          <h2 id="saved-projects" className="text-section font-semibold">
+            Saved on this device
+          </h2>
+          <ul aria-labelledby="saved-projects" className="flex flex-col divide-y divide-border">
+            {projects.map((project) => (
+              <li
+                key={project.id}
+                className="flex flex-wrap items-center justify-between gap-3 py-3"
+              >
+                <div>
+                  <p className="font-semibold">{project.name}</p>
+                  <p className="text-small text-text-secondary">
+                    {plural(project.snapshots, 'analysis', 'analyses')}
+                    {project.latest &&
+                      ` · ${plural(project.latest.customerCount, 'customer')} as of ${formatDay(
+                        Date.parse(`${project.latest.analysisDate}T00:00:00Z`),
+                      )}`}
+                  </p>
+                </div>
+                <Button
+                  aria-label={`Open ${project.name}`}
+                  onClick={() => onOpenProject?.(project.id)}
+                >
+                  Open
+                </Button>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
       {storage === 'unavailable' && (
         <Notice tone="warning" title="This browser is not letting the app store data">
           You can still analyse a file, but nothing will be saved when you close this tab.
