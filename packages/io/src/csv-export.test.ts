@@ -1,3 +1,4 @@
+import fc from 'fast-check';
 import Papa from 'papaparse';
 import { describe, expect, it } from 'vitest';
 import { escapeTextCell, toCsv } from './csv-export';
@@ -68,5 +69,28 @@ describe('toCsv', () => {
 
   it('escapes header cells too', () => {
     expect(parse(toCsv(['=x'], []))).toEqual([["'=x"]]);
+  });
+});
+
+describe('escaping, for any text (property)', () => {
+  // Arbitrary text, plus text that starts with a formula character on purpose.
+  const text = fc.oneof(
+    fc.string({ unit: 'binary' }),
+    fc
+      .tuple(fc.constantFrom('=', '+', '-', '@', '\t', '\r'), fc.string({ unit: 'binary' }))
+      .map(([start, rest]) => start + rest),
+  );
+
+  it('reads back as the same text, never starting with a formula character', () => {
+    fc.assert(
+      fc.property(text, (value) => {
+        const [, row] = parse(toCsv(['Value', 'End'], [[value, 'end']]));
+        const cell = row?.[0] ?? '';
+        expect(cell).not.toMatch(/^[=+\-@\t\r]/);
+        expect(row?.[1]).toBe('end');
+        expect(cell === value || cell === `'${value}`).toBe(true);
+      }),
+      { numRuns: 2000 },
+    );
   });
 });
