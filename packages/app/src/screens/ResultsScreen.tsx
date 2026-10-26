@@ -1,14 +1,10 @@
-// Processing, then the grid; from the grid, any segment's detail and export (S6).
-
-import { defaultSegmentMap } from '@rfm-matrix/core';
+// Processing, then the finished analysis (AnalysisView), or why it stopped.
 import { useEffect, useRef, useState } from 'react';
 import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
 import { type AnalysisHandle, startAnalysis, WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
-import { Toast } from '../components/Toast';
-import { GridPage } from '../grid/GridPage';
-import { SegmentScreen } from '../segment/SegmentScreen';
+import { AnalysisView } from './AnalysisView';
 import { describeReadFailure } from './unreadable';
 
 type Props = {
@@ -42,8 +38,6 @@ function failure(error: Error, rowsRead: number): State {
 export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysis }: Props) {
   const [state, setState] = useState<State>({ status: 'running' });
   const job = useRef<AnalysisHandle | null>(null);
-  const [openSegment, setOpenSegment] = useState<string | null>(null);
-  const [toast, setToast] = useState<string | null>(null);
 
   useEffect(() => {
     let stopped = false;
@@ -125,46 +119,14 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
           <p>{state.message}</p>
         </Notice>
       )}
-      {state.status === 'done' && !openSegment && (
-        <GridPage result={state.result} wallMs={state.wallMs} onOpenSegment={setOpenSegment} />
-      )}
-      {state.status === 'done' && openSegment && job.current && (
-        <SegmentDetail
-          segmentId={openSegment}
+      {state.status === 'done' && job.current && (
+        <AnalysisView
           result={state.result}
+          wallMs={state.wallMs}
           hasEmail={state.hasEmail}
           handle={job.current}
-          onBack={() => setOpenSegment(null)}
-          onExported={setToast}
         />
       )}
-      {toast && <Toast message={toast} onClose={() => setToast(null)} />}
     </>
-  );
-}
-
-type DetailProps = {
-  segmentId: string;
-  result: DoneMessage;
-  hasEmail: boolean;
-  handle: AnalysisHandle;
-  onBack(): void;
-  onExported(message: string): void;
-};
-
-function SegmentDetail({ segmentId, result, hasEmail, handle, onBack, onExported }: DetailProps) {
-  const segment = defaultSegmentMap.segments.find((s) => s.id === segmentId);
-  const summary = result.segments.segments.find((s) => s.id === segmentId);
-  if (!segment || !summary) return null;
-  return (
-    <SegmentScreen
-      segment={segment}
-      summary={summary}
-      session={handle.session}
-      analysisDate={result.analysisDate}
-      hasEmail={hasEmail}
-      onBack={onBack}
-      onExported={onExported}
-    />
   );
 }

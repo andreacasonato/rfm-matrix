@@ -1,7 +1,8 @@
 // The grid page (DESIGN_BRIEF sketch): tiles, the heatmap beside the segment list, then how the
 // numbers were made. Its one job is to show which segment to act on first.
-import { defaultSegmentMap } from '@rfm-matrix/core';
+import { defaultSegmentMap, type SegmentMap } from '@rfm-matrix/core';
 import type { DoneMessage } from '../analysis/protocol';
+import { Button } from '../components/Button';
 import { describeScoring } from '../screens/describe-scoring';
 import { formatDay } from '../screens/format';
 import { Heatmap } from './Heatmap';
@@ -11,9 +12,21 @@ import { StatTiles } from './StatTiles';
 
 const count = (n: number) => n.toLocaleString('en-US');
 
-type Props = { result: DoneMessage; wallMs: number; onOpenSegment(segmentId: string): void };
+type Props = {
+  result: DoneMessage;
+  wallMs: number;
+  map?: SegmentMap;
+  onOpenSegment(segmentId: string): void;
+  onEditRules?(): void;
+};
 
-export function GridPage({ result, wallMs, onOpenSegment }: Props) {
+export function GridPage({
+  result,
+  wallMs,
+  map = defaultSegmentMap,
+  onOpenSegment,
+  onEditRules,
+}: Props) {
   return (
     <>
       <StatTiles
@@ -23,9 +36,14 @@ export function GridPage({ result, wallMs, onOpenSegment }: Props) {
         analysisDate={result.analysisDate}
       />
       <div className="grid gap-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,28rem)]">
-        <Heatmap cells={result.grid} segments={defaultSegmentMap.segments} onOpen={onOpenSegment} />
+        <Heatmap cells={result.grid} segments={map.segments} onOpen={onOpenSegment} />
         <SegmentPanel summary={result.segments} onOpen={onOpenSegment} />
       </div>
+      {onEditRules && (
+        <div>
+          <Button onClick={onEditRules}>Edit segment rules</Button>
+        </div>
+      )}
       <section className="flex flex-col gap-1 text-small text-text-secondary">
         <p>
           Scores as of {formatDay(Date.parse(`${result.analysisDate}T00:00:00Z`))}.{' '}
