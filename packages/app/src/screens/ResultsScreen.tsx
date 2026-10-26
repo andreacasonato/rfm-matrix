@@ -1,7 +1,8 @@
 // Processing, then the finished analysis (AnalysisView), or why it stopped.
 import { useEffect, useRef, useState } from 'react';
+import { type AnalysisHandle, startAnalysis } from '../analysis/analysis-client';
 import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
-import { type AnalysisHandle, startAnalysis, WorkerJobError } from '../analysis/worker-client';
+import { WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { AnalysisView } from './AnalysisView';

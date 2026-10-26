@@ -12,7 +12,7 @@ import {
   validateMap,
 } from '@rfm-matrix/core';
 import { useState } from 'react';
-import type { AnalysisSession } from '../analysis/worker-client';
+import type { AnalysisSession } from '../analysis/analysis-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { SegmentPanel } from '../grid/SegmentPanel';

@@ -23,12 +23,16 @@ export type AnalysisPlan = {
   cleaning?: CleaningRules;
   /** Chosen on the cleaning screen; without it the default methods apply (ADR-0004). */
   scoring?: ScoringMethods;
+  /** A saved project's rules (S8); without it the default map applies. */
+  segmentMap?: SegmentMap;
 };
 
 /** How to read the file; missing fields are detected. */
 export type CsvFormat = { encoding?: TextEncodingName; delimiter?: string };
 
 export type StartMessage = { type: 'start'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
+/** Opens a saved snapshot instead of reading a file (S8). */
+export type OpenMessage = { type: 'open'; snapshotId: string; map: SegmentMap };
 export type PreviewRequest = { type: 'preview'; file: Blob; format: CsvFormat };
 export type SummaryRequest = { type: 'summary'; file: Blob; plan: AnalysisPlan; format: CsvFormat };
 /** Questions about the last finished analysis, answered by the same worker (S6). */
@@ -59,6 +63,7 @@ export type SaveReply = { type: 'saved'; requestId: number; result: SaveResult }
 
 export type WorkerRequest =
   | StartMessage
+  | OpenMessage
   | PreviewRequest
   | SummaryRequest
   | SessionRequest

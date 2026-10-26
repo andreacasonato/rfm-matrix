@@ -7,8 +7,8 @@ import {
   type SegmentsSummary,
 } from '@rfm-matrix/core';
 import { useState } from 'react';
+import type { AnalysisHandle } from '../analysis/analysis-client';
 import type { DoneMessage } from '../analysis/protocol';
-import type { AnalysisHandle } from '../analysis/worker-client';
 import { Toast } from '../components/Toast';
 import { GridPage } from '../grid/GridPage';
 import { RulesScreen } from '../rules/RulesScreen';

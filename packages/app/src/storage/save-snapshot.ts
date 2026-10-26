@@ -30,6 +30,7 @@ export async function handleSave(
   });
   if (!analysis) return reply(saveFailure(new Error('No finished analysis to save.')));
   const { table, meta } = analysis;
+  if (!meta) return reply(saveFailure(new Error('This analysis is already saved.')));
   const { target } = request;
   const validation = validateMap(target.map);
   if (!validation.ok) return reply(saveFailure(new Error(validation.problems.join(' '))));

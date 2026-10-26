@@ -21,7 +21,7 @@ import { errorMessage } from './worker-error';
 type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
 /** What the worker keeps after an analysis: the customers, and what saving needs (S8). */
-export type Analysis = { table: CustomerTable; meta: AnalysisMeta };
+export type Analysis = { table: CustomerTable; meta?: AnalysisMeta };
 export type AnalysisMeta = {
   source: Blob | string;
   plan: AnalysisPlan;
@@ -61,7 +61,8 @@ export async function runAnalysis(
     const { customers, counts, analysisDate } = read.book.finish(plan.cleaning ?? keepAll);
     const scoring = plan.scoring ?? defaultScoring;
     const scores = score(customers, { scoring, ...(analysisDate ? { analysisDate } : {}) });
-    const segmented = applySegments(scores.customers, defaultSegmentMap);
+    const map = plan.segmentMap ?? defaultSegmentMap;
+    const segmented = applySegments(scores.customers, map);
     let monetaryTotal = 0;
     let repeatCustomers = 0;
     for (const customer of customers) {
@@ -82,8 +83,8 @@ export async function runAnalysis(
       scoring,
       problems: read.problems.slice(0, 10),
       analysisDate: analysisDay,
-      segments: summariseSegments(segmented, defaultSegmentMap),
-      grid: gridCells(segmented, defaultSegmentMap),
+      segments: summariseSegments(segmented, map),
+      grid: gridCells(segmented, map),
       cellCustomers: cellCustomers(table),
       repeatCustomers,
       elapsedMs: now() - started,

@@ -35,7 +35,7 @@ export type CustomerRow = {
 };
 export type SegmentPage = { total: number; rows: CustomerRow[] };
 
-type OrderTimes = { firstOrderAt: Date; lastOrderAt: Date };
+type OrderTimes = { firstOrderAt: Date | number; lastOrderAt: Date | number };
 
 /** `orderTimes`, when given, lines up with `scores`, as the aggregates scores came from do. */
 export function buildCustomerTable(
@@ -68,8 +68,8 @@ export function buildCustomerTable(
     table.r[i] = c.r;
     table.f[i] = c.f;
     table.m[i] = c.m;
-    table.firstOrderAt[i] = orderTimes?.[i]?.firstOrderAt.getTime() ?? 0;
-    table.lastOrderAt[i] = orderTimes?.[i]?.lastOrderAt.getTime() ?? 0;
+    table.firstOrderAt[i] = Number(orderTimes?.[i]?.firstOrderAt ?? 0);
+    table.lastOrderAt[i] = Number(orderTimes?.[i]?.lastOrderAt ?? 0);
     let id = segmentIds.indexOf(c.segmentId);
     if (id < 0) id = segmentIds.push(c.segmentId) - 1;
     table.segment[i] = id;

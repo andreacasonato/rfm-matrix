@@ -2,7 +2,7 @@
 // worker at once, so the counts beside the editor always match the draft.
 import type { SegmentMap, SegmentsSummary } from '@rfm-matrix/core';
 import { useCallback, useRef, useState } from 'react';
-import type { AnalysisSession } from '../analysis/worker-client';
+import type { AnalysisSession } from '../analysis/analysis-client';
 
 export type Change = { message: string; key: number };
 
