@@ -1,6 +1,6 @@
 # ADR-0015: Content-Security-Policy as a meta tag, with Trusted Types
 
-- Status: Accepted (approved by the maintainer on 2026-10-26; the `trusted-types default` change below awaits the maintainer's confirmation)
+- Status: Accepted (approved by the maintainer on 2026-10-26, including the `trusted-types default` change below)
 - Date: 2026-10-26
 
 ## Context
