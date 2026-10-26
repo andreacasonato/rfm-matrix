@@ -93,10 +93,13 @@ export type SummaryProgressMessage = {
 };
 export type SummaryDoneMessage = { type: 'summary-done'; summary: FileSummary };
 
+/** Why a file could not be read: a file check, or the browser running out of memory. */
+export type ReadFailure = UnreadableKind | 'out-of-memory';
+
 export type ErrorMessage = {
   type: 'error';
   message: string;
-  unreadable?: UnreadableKind;
+  unreadable?: ReadFailure;
   /** Set when the error answers a session request. */
   requestId?: number;
 };

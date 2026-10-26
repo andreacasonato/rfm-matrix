@@ -122,4 +122,29 @@ describe('UploadScreen', () => {
     await act(async () => fake.calls[0]?.reject(new WorkerJobError('Disk read failed')));
     expect(screen.getByRole('alert').textContent).toContain('Disk read failed');
   });
+
+  it('explains the size limit and what to do about it', async () => {
+    const fake = fakePreview();
+    const { container } = render(
+      <UploadScreen onBack={() => {}} onContinue={() => {}} previewFile={fake.previewFile} />,
+    );
+    chooseFile(container);
+    await act(async () => fake.calls[0]?.reject(new WorkerJobError('x', 'too-large')));
+    const alert = screen.getByRole('alert').textContent;
+    expect(alert).toContain('larger than 320 MB');
+    expect(alert).toContain('shorter date range');
+  });
+
+  it('says the file is too large for the browser, with the rows reached', async () => {
+    const fake = fakePreview();
+    const { container } = render(
+      <UploadScreen onBack={() => {}} onContinue={() => {}} previewFile={fake.previewFile} />,
+    );
+    chooseFile(container);
+    act(() => fake.progress({ type: 'preview-progress', rowsRead: 800_000, bytesRead: 1 }));
+    await act(async () => fake.calls[0]?.reject(new WorkerJobError('x', 'out-of-memory')));
+    const alert = screen.getByRole('alert').textContent;
+    expect(alert).toContain('too large for your browser');
+    expect(alert).toContain('after 800,000 rows');
+  });
 });

@@ -3,12 +3,13 @@
 import { defaultSegmentMap } from '@rfm-matrix/core';
 import { useEffect, useRef, useState } from 'react';
 import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../analysis/protocol';
-import { type AnalysisHandle, startAnalysis } from '../analysis/worker-client';
+import { type AnalysisHandle, startAnalysis, WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { Toast } from '../components/Toast';
 import { GridPage } from '../grid/GridPage';
 import { SegmentScreen } from '../segment/SegmentScreen';
+import { describeReadFailure } from './unreadable';
 
 type Props = {
   label: string;
@@ -24,11 +25,19 @@ type State =
   | { status: 'running'; progress?: ProgressMessage }
   | { status: 'done'; result: DoneMessage; wallMs: number; hasEmail: boolean }
   | { status: 'cancelled' }
-  | { status: 'error'; message: string };
+  | { status: 'error'; title: string; message: string };
 
 const count = (n: number) => n.toLocaleString('en-US');
 
 const isCancel = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
+
+function failure(error: Error, rowsRead: number): State {
+  if (error instanceof WorkerJobError && error.unreadable) {
+    const { title, detail } = describeReadFailure(error.unreadable, rowsRead);
+    return { status: 'error', title, message: detail };
+  }
+  return { status: 'error', title: 'Something went wrong', message: error.message };
+}
 
 export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysis }: Props) {
   const [state, setState] = useState<State>({ status: 'running' });
@@ -42,9 +51,11 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
     load().then(
       ({ source, plan, format }) => {
         if (stopped) return;
-        const current = analyse(source, plan, format, (progress) =>
-          setState({ status: 'running', progress }),
-        );
+        let rowsRead = 0;
+        const current = analyse(source, plan, format, (progress) => {
+          rowsRead = progress.rowsRead;
+          setState({ status: 'running', progress });
+        });
         job.current = current;
         current.result.then(
           (result) =>
@@ -58,11 +69,11 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
             }),
           (error: Error) => {
             // Cancel rejects the job too; the cancel button has already updated the screen.
-            if (!stopped && !isCancel(error)) setState({ status: 'error', message: error.message });
+            if (!stopped && !isCancel(error)) setState(failure(error, rowsRead));
           },
         );
       },
-      (error: Error) => setState({ status: 'error', message: error.message }),
+      (error: Error) => setState(failure(error, 0)),
     );
     return () => {
       stopped = true;
@@ -108,7 +119,7 @@ export function ResultsScreen({ label, load, onStartOver, analyse = startAnalysi
       {state.status === 'error' && (
         <Notice
           tone="error"
-          title="Something went wrong"
+          title={state.title}
           actions={<Button onClick={onStartOver}>Start over</Button>}
         >
           <p>{state.message}</p>

@@ -12,6 +12,7 @@ import {
 import { buildCustomerTable, type CustomerTable } from '../segment/customer-table';
 import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 import { readOrders } from './read-orders';
+import { errorMessage } from './worker-error';
 
 type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
@@ -66,7 +67,7 @@ export async function runAnalysis(
     // Kept by the worker for segment detail and export, never sent to the page whole (S6).
     return buildCustomerTable(segmented, plan.mapping.email !== undefined);
   } catch (error) {
-    post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+    post(errorMessage(error));
     return undefined;
   }
 }

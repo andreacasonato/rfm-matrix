@@ -1,5 +1,4 @@
 // Runs one job in a fresh worker from the page. Cancel stops the worker immediately.
-import type { UnreadableKind } from '@rfm-matrix/io';
 import type { SegmentPage, Sort } from '../segment/customer-table';
 import type {
   AnalysisPlan,
@@ -8,6 +7,7 @@ import type {
   PreviewDoneMessage,
   PreviewProgressMessage,
   ProgressMessage,
+  ReadFailure,
   SessionReply,
   SessionRequest,
   SummaryDoneMessage,
@@ -22,7 +22,7 @@ export type JobHandle<T> = { result: Promise<T>; cancel(): void };
 export class WorkerJobError extends Error {
   constructor(
     message: string,
-    readonly unreadable?: UnreadableKind,
+    readonly unreadable?: ReadFailure,
   ) {
     super(message);
     this.name = 'WorkerJobError';
