@@ -16,6 +16,7 @@ import type { AnalysisSession } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { SegmentPanel } from '../grid/SegmentPanel';
+import { RulesFileActions } from './RulesFileActions';
 import { RulesGrid } from './RulesGrid';
 import { UndoBar } from './UndoBar';
 import { useRulesDraft } from './use-rules-draft';
@@ -57,6 +58,12 @@ export function RulesScreen({ saved, segments, cellCustomers, session, onSave, o
         `Every M score now uses the M${layer} rules.`,
       );
     }
+  }
+
+  function openFile(map: SegmentMap, message: string) {
+    // A file whose rules differ by M must be edited one M score at a time.
+    if (!sameForEveryM(map)) setEveryM(false);
+    void rules.apply(map, message);
   }
 
   async function discard() {
@@ -146,6 +153,7 @@ export function RulesScreen({ saved, segments, cellCustomers, session, onSave, o
         >
           Reset to default
         </Button>
+        <RulesFileActions map={rules.draft} base={saved} onOpen={openFile} />
       </div>
       {rules.change && (
         // A new key per change restarts the bar and its 10 seconds.

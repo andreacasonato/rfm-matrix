@@ -5,6 +5,7 @@ import {
   type SegmentMap,
   type SegmentsSummary,
   segmentFor,
+  segmentMapToFile,
   setCell,
   summariseSegments,
 } from '@rfm-matrix/core';
@@ -160,5 +161,17 @@ describe('RulesScreen (S7, PRD story 6)', () => {
     expect(screen.getByRole('status').textContent).toContain(
       'Every M score now uses the M3 rules.',
     );
+  });
+
+  it('opens a file whose rules differ by M one M score at a time', async () => {
+    const fake = setup();
+    const map = setCell(defaultSegmentMap, { r: 3, f: 3, m: 5 }, 'champions');
+    const file = new File([segmentMapToFile(map)], 'by-m.json');
+    const input = document.querySelector('input[type=file]');
+    if (!input) throw new Error('no file input');
+    await act(async () => fireEvent.change(input, { target: { files: [file] } }));
+    expect(fake.lastMap()).toEqual(map);
+    const everyM = screen.getByRole('checkbox', { name: 'Same rules for every M score' });
+    expect((everyM as HTMLInputElement).checked).toBe(false);
   });
 });

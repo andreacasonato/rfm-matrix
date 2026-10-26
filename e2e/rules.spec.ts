@@ -47,4 +47,42 @@ test.describe('segment rules (S7)', () => {
     await page.getByRole('button', { name: 'Open Lost', exact: true }).click();
     await expect(page.getByText(`of ${lost}`)).toBeVisible();
   });
+
+  test('exported rules open again, and a hostile rules file is shown as text only', async ({
+    page,
+  }) => {
+    await page.goto('/');
+    await page.getByRole('button', { name: 'Try sample data' }).click();
+    await page.getByRole('button', { name: 'Edit segment rules' }).click();
+    await page.getByRole('combobox', { name: 'Segment for R5 F1' }).selectOption('champions');
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Export rules' }).click();
+    const saved = await (await download).path();
+
+    await page.getByRole('button', { name: 'Reset to default' }).click();
+    await expect(page.getByRole('combobox', { name: 'Segment for R5 F1' })).toHaveValue(
+      'new-customers',
+    );
+    const input = page.locator('input[type=file][accept*="json"]');
+    await input.setInputFiles(saved);
+    await expect(page.getByRole('combobox', { name: 'Segment for R5 F1' })).toHaveValue(
+      'champions',
+    );
+
+    const cells = Array.from({ length: 125 }, () => 'lost');
+    cells[0] = '<img src=x onerror="window.hacked=1">';
+    await input.setInputFiles({
+      name: 'evil.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify({ format: 'rfm-matrix-segment-map', version: 1, cells })),
+    });
+    await expect(page.getByRole('alert')).toContainText('evil.json cannot be used');
+    await expect(page.getByRole('alert')).toContainText('"<img src=x onerror=');
+    expect(await page.evaluate(() => (window as unknown as { hacked?: number }).hacked)).toBe(
+      undefined,
+    );
+    await expect(page.getByRole('combobox', { name: 'Segment for R5 F1' })).toHaveValue(
+      'champions',
+    );
+  });
 });

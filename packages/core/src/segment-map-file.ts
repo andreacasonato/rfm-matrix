@@ -28,9 +28,14 @@ const cellName = (i: number) => {
   return `R${r as Score} F${f as Score} M${m as Score}`;
 };
 
+/** Refuses a file by its size alone, before it is read; null when the size is fine. */
+export const refuseLargeMapFile = (size: number): MapFileResult | null =>
+  size > maxMapFileLength ? fail('This file is too large to be a rules file.') : null;
+
 /** Reads a rules file against the app's own segments (`base`). */
 export function segmentMapFromFile(text: string, base: SegmentMap): MapFileResult {
-  if (text.length > maxMapFileLength) return fail('This file is too large to be a rules file.');
+  const tooLarge = refuseLargeMapFile(text.length);
+  if (tooLarge) return tooLarge;
   let data: unknown;
   try {
     data = JSON.parse(text);
