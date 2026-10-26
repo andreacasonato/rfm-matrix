@@ -44,7 +44,25 @@ export type SessionRequest =
   | { type: 'export'; requestId: number; segmentId: string; segmentName: string }
   /** Re-assigns every customer with an edited map (S7). */
   | { type: 'apply-map'; requestId: number; map: SegmentMap };
-export type WorkerRequest = StartMessage | PreviewRequest | SummaryRequest | SessionRequest;
+/** Where to save a finished analysis (S8): a new project, or a snapshot of an existing one. */
+export type SaveTarget = {
+  projectId?: string;
+  projectName: string;
+  sourceFileName: string;
+  map: SegmentMap;
+};
+export type SaveRequest = { type: 'save'; requestId: number; target: SaveTarget };
+export type SaveResult =
+  | { ok: true; projectId: string; snapshotId: string }
+  | { ok: false; storageFull: boolean; message: string };
+export type SaveReply = { type: 'saved'; requestId: number; result: SaveResult };
+
+export type WorkerRequest =
+  | StartMessage
+  | PreviewRequest
+  | SummaryRequest
+  | SessionRequest
+  | SaveRequest;
 
 export type ProgressMessage = {
   type: 'progress';
@@ -113,6 +131,7 @@ export type SessionReply =
   | { type: 'segment-page-done'; requestId: number; page: SegmentPage }
   | { type: 'export-done'; requestId: number; file: Blob; rows: number }
   | { type: 'map-applied'; requestId: number; segments: SegmentsSummary }
+  | SaveReply
   | ErrorMessage;
 
 export type WorkerMessage =

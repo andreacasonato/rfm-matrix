@@ -39,7 +39,7 @@ function fakeSession(total: number) {
     }),
   );
   const exportSegment = vi.fn(async () => ({ file: new Blob(['csv']), rows: total }));
-  return { segmentPage, exportSegment, applyMap: vi.fn() } satisfies AnalysisSession;
+  return { segmentPage, exportSegment, applyMap: vi.fn(), save: vi.fn() } satisfies AnalysisSession;
 }
 
 const summary = (customers: number): SegmentSummary => ({

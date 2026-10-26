@@ -9,6 +9,9 @@ import type {
   PreviewProgressMessage,
   ProgressMessage,
   ReadFailure,
+  SaveRequest,
+  SaveResult,
+  SaveTarget,
   SessionReply,
   SessionRequest,
   SummaryDoneMessage,
@@ -35,6 +38,8 @@ export type AnalysisSession = {
   segmentPage(segmentId: string, sort: Sort, page: number, pageSize: number): Promise<SegmentPage>;
   exportSegment(segmentId: string, segmentName: string): Promise<{ file: Blob; rows: number }>;
   applyMap(map: SegmentMap): Promise<SegmentsSummary>;
+  /** Saves the analysis on this device (S8); never rejects for a full disk. */
+  save(target: SaveTarget): Promise<SaveResult>;
 };
 
 type Pending = { resolve(reply: SessionReply): void; reject(error: Error): void };
@@ -46,7 +51,7 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
   onProgress: (progress: Progress) => void,
   { keepAlive = false } = {},
 ): JobHandle<Done> & {
-  ask(request: DistributiveOmit<SessionRequest, 'requestId'>): Promise<SessionReply>;
+  ask(request: DistributiveOmit<SessionRequest | SaveRequest, 'requestId'>): Promise<SessionReply>;
 } {
   const worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
   let cancel = () => {};
@@ -88,12 +93,12 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
   });
 
   worker.postMessage(request);
-  const ask = (question: DistributiveOmit<SessionRequest, 'requestId'>) =>
+  const ask = (question: DistributiveOmit<SessionRequest | SaveRequest, 'requestId'>) =>
     new Promise<SessionReply>((resolve, reject) => {
       if (stopped) return reject(new DOMException('Cancelled', 'AbortError'));
       const requestId = nextRequest++;
       pending.set(requestId, { resolve, reject });
-      worker.postMessage({ ...question, requestId } as SessionRequest);
+      worker.postMessage({ ...question, requestId } as SessionRequest | SaveRequest);
     });
   // Before the result: cancels the job. After it (analysis sessions): closes the worker.
   return {
@@ -138,6 +143,11 @@ export function startAnalysis(
       const reply = await job.ask({ type: 'apply-map', map });
       if (reply.type !== 'map-applied') throw new WorkerJobError('Unexpected reply');
       return reply.segments;
+    },
+    async save(target) {
+      const reply = await job.ask({ type: 'save', target });
+      if (reply.type !== 'saved') throw new WorkerJobError('Unexpected reply');
+      return reply.result;
     },
   };
   return { result: job.result, cancel: job.cancel, session };

@@ -1,9 +1,9 @@
 // Runs parsing, previews and scoring off the main thread (ADR-0003). After an analysis the
 // worker keeps its customer table and answers segment questions about it (S6).
-import type { CustomerTable } from '../segment/customer-table';
 import { handleSessionRequest } from '../segment/session';
+import { handleSave } from '../storage/save-snapshot';
 import type { WorkerMessage, WorkerRequest } from './protocol';
-import { runAnalysis } from './run-analysis';
+import { type Analysis, runAnalysis } from './run-analysis';
 import { runPreview } from './run-preview';
 import { runSummary } from './run-summary';
 
@@ -13,7 +13,7 @@ const scope = self as unknown as {
   postMessage(message: WorkerMessage): void;
 };
 
-let table: CustomerTable | undefined;
+let analysis: Analysis | undefined;
 
 scope.onmessage = (event) => {
   const request = event.data;
@@ -22,8 +22,9 @@ scope.onmessage = (event) => {
   else if (request.type === 'summary') {
     void runSummary(request.file, request.plan, request.format, post);
   } else if (request.type === 'start') {
-    void runAnalysis(request.file, request.plan, post, { format: request.format }).then((t) => {
-      table = t;
+    void runAnalysis(request.file, request.plan, post, { format: request.format }).then((a) => {
+      analysis = a;
     });
-  } else void handleSessionRequest(table, request).then(post);
+  } else if (request.type === 'save') void handleSave(analysis, request).then(post);
+  else void handleSessionRequest(analysis?.table, request).then(post);
 };

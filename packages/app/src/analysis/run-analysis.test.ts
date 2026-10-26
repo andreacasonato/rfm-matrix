@@ -57,8 +57,8 @@ describe('runAnalysis', () => {
     expect(done.grid.reduce((n, c) => n + c.revenue, 0)).toBeCloseTo(100, 6);
     expect(done.repeatCustomers).toBe(1);
     // Kept by the worker for segment detail and export (S6), with emails as mapped.
-    expect(lastTable?.keys).toHaveLength(6);
-    expect(lastTable?.emails).toContain('a@example.test');
+    expect(lastTable?.table.keys).toHaveLength(6);
+    expect(lastTable?.table.emails).toContain('a@example.test');
   });
 
   it('posts progress while reading, at most every 250 ms or 50,000 rows', async () => {

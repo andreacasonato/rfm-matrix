@@ -18,7 +18,7 @@ function fakeAnalysis() {
         reject = fail;
       }),
       cancel,
-      session: { segmentPage: vi.fn(), exportSegment: vi.fn(), applyMap: vi.fn() },
+      session: { segmentPage: vi.fn(), exportSegment: vi.fn(), applyMap: vi.fn(), save: vi.fn() },
     };
   });
   return {
