@@ -77,6 +77,10 @@ export type {
   ScoringMethods,
 } from './score';
 export { defaultScoring, NotEnoughCustomersError, score, validateBreaks } from './score';
+export type { CellTarget } from './segment-edits';
+export { copyLayer, describeCell, rfSegment, sameForEveryM, setCell } from './segment-edits';
+export type { MapFileResult } from './segment-map-file';
+export { maxMapFileLength, segmentMapFromFile, segmentMapToFile } from './segment-map-file';
 export type { Segment, SegmentMap, ValidationResult } from './segments';
 export { applySegments, cellIndex, defaultSegmentMap, segmentFor, validateMap } from './segments';
 export type { SegmentSummary, SegmentsSummary } from './summary';
