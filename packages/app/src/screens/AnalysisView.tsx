@@ -11,6 +11,7 @@ import type { AnalysisHandle } from '../analysis/analysis-client';
 import type { DoneMessage, SaveResult } from '../analysis/protocol';
 import { Toast } from '../components/Toast';
 import { GridPage } from '../grid/GridPage';
+import { HowScoresWork } from '../how/HowScoresWork';
 import { MovementScreen } from '../movement/MovementScreen';
 import { RulesScreen } from '../rules/RulesScreen';
 import { SegmentScreen } from '../segment/SegmentScreen';
@@ -40,7 +41,8 @@ type View =
   | { name: 'grid' }
   | { name: 'segment'; id: string }
   | { name: 'rules' }
-  | { name: 'movement'; snapshots: SnapshotSummary[] };
+  | { name: 'movement'; snapshots: SnapshotSummary[] }
+  | { name: 'how' };
 
 export function AnalysisView({
   result,
@@ -111,6 +113,7 @@ export function AnalysisView({
           map={map}
           onOpenSegment={(id) => setView({ name: 'segment', id })}
           onEditRules={() => setView({ name: 'rules' })}
+          onHowScores={() => setView({ name: 'how' })}
           {...(projectId ? { onMovement: () => void showMovement() } : {})}
         />
       )}
@@ -141,6 +144,15 @@ export function AnalysisView({
           map={map}
           onBack={() => setView({ name: 'grid' })}
           onExported={setToast}
+        />
+      )}
+      {view.name === 'how' && (
+        <HowScoresWork
+          scoring={shown.scoring}
+          breakpoints={shown.breakpoints}
+          cellCustomers={shown.cellCustomers}
+          analysisDate={shown.analysisDate}
+          onBack={() => setView({ name: 'grid' })}
         />
       )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

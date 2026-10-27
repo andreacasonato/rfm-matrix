@@ -60,6 +60,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
       // The heatmap's one animation would be measured mid-fill; wait for it to end.
       await page.waitForTimeout(1200);
       await expectAccessible(page, 'Grid');
+      await page.getByRole('button', { name: 'How scores work' }).click();
+      await expectAccessible(page, 'How scores work');
+      await page.getByRole('button', { name: 'Back to grid' }).click();
       await page.getByRole('button', { name: 'Edit segment rules' }).click();
       await expectAccessible(page, 'Segment rules');
       await page.getByRole('button', { name: 'Back to grid' }).click();

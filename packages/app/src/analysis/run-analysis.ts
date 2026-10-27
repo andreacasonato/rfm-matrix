@@ -86,6 +86,7 @@ export async function runAnalysis(
       segments: summariseSegments(segmented, map),
       grid: gridCells(segmented, map),
       cellCustomers: cellCustomers(table),
+      breakpoints: scores.breakpoints,
       repeatCustomers,
       elapsedMs: now() - started,
     });

@@ -20,6 +20,7 @@ type Props = {
   onEditRules?(): void;
   /** Only for a saved project (S10). */
   onMovement?(): void;
+  onHowScores?(): void;
 };
 
 export function GridPage({
@@ -29,6 +30,7 @@ export function GridPage({
   onOpenSegment,
   onEditRules,
   onMovement,
+  onHowScores,
 }: Props) {
   return (
     <>
@@ -52,6 +54,14 @@ export function GridPage({
         <p>
           Scores as of {formatDay(Date.parse(`${result.analysisDate}T00:00:00Z`))}.{' '}
           {describeScoring(result.scoring)}
+          {onHowScores && (
+            <>
+              {' '}
+              <Button variant="quiet" className="h-auto px-0 text-small" onClick={onHowScores}>
+                How scores work
+              </Button>
+            </>
+          )}
         </p>
         <LeftOut counts={result.cleaning} />
         <output data-status="done" data-wall-ms={wallMs} data-result={JSON.stringify(result)}>

@@ -1,6 +1,7 @@
 // Messages between the page and the analysis worker (ADR-0003).
 import type {
   AmountLevel,
+  Breakpoints,
   CleaningCounts,
   CleaningRules,
   ColumnMapping,
@@ -136,6 +137,8 @@ export type DoneMessage = {
   grid: GridCell[];
   /** Customers in each of the 125 R × F × M cells, by `cellIndex` (S7). */
   cellCustomers: number[];
+  /** The cut points behind the scores (How scores work). */
+  breakpoints: Record<'r' | 'f' | 'm', Breakpoints>;
   /** Customers with two or more orders. */
   repeatCustomers: number;
   elapsedMs: number;

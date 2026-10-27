@@ -43,7 +43,9 @@ const cell = (name: string) => screen.getByRole('combobox', { name: `Segment for
 const choose = async (name: string, segmentId: string) =>
   act(async () => fireEvent.change(cell(name), { target: { value: segmentId } }));
 
-describe('RulesScreen (S7, PRD story 6)', () => {
+// 25 selects of 11 segments in jsdom take about a second each render; under a full parallel run
+// that passed the 5 s default, so this file gets more time. The assertions are unchanged.
+describe('RulesScreen (S7, PRD story 6)', { timeout: 15_000 }, () => {
   it('shows one choice per recency × frequency square, with its customers', () => {
     setup();
     expect(screen.getAllByRole('combobox')).toHaveLength(25);

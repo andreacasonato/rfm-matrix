@@ -55,6 +55,7 @@ export async function runOpenSnapshot(
       segments: summariseSegments(scores, map),
       grid: gridCells(scores, map),
       cellCustomers: cellCustomers(table),
+      breakpoints: snapshot.breakpoints,
       repeatCustomers: report.repeatCustomers,
       elapsedMs: now() - started,
     });
