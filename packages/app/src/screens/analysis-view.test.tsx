@@ -87,4 +87,16 @@ describe('AnalysisView saving (S8)', () => {
     await show({ project: { id: 'p1', name: 'orders', map: defaultSegmentMap } }, fake.handle);
     expect(fake.save).not.toHaveBeenCalled();
   });
+
+  it('offers Movement once the analysis belongs to a saved project, not for the sample (S10)', async () => {
+    const fake = handle({ ok: true, projectId: 'p1', snapshotId: 's1' });
+    await show({}, fake.handle);
+    expect(screen.queryByRole('button', { name: 'Movement' })).toBeNull();
+    cleanup();
+    await show(
+      { project: { name: 'orders', sourceFileName: 'orders.csv', map: defaultSegmentMap } },
+      fake.handle,
+    );
+    expect(screen.getByRole('button', { name: 'Movement' })).toBeTruthy();
+  });
 });

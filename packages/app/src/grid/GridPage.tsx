@@ -18,6 +18,8 @@ type Props = {
   map?: SegmentMap;
   onOpenSegment(segmentId: string): void;
   onEditRules?(): void;
+  /** Only for a saved project (S10). */
+  onMovement?(): void;
 };
 
 export function GridPage({
@@ -26,6 +28,7 @@ export function GridPage({
   map = defaultSegmentMap,
   onOpenSegment,
   onEditRules,
+  onMovement,
 }: Props) {
   return (
     <>
@@ -39,9 +42,10 @@ export function GridPage({
         <Heatmap cells={result.grid} segments={map.segments} onOpen={onOpenSegment} />
         <SegmentPanel summary={result.segments} onOpen={onOpenSegment} />
       </div>
-      {onEditRules && (
-        <div>
-          <Button onClick={onEditRules}>Edit segment rules</Button>
+      {(onEditRules || onMovement) && (
+        <div className="flex flex-wrap gap-3">
+          {onEditRules && <Button onClick={onEditRules}>Edit segment rules</Button>}
+          {onMovement && <Button onClick={onMovement}>Movement</Button>}
         </div>
       )}
       <section className="flex flex-col gap-1 text-small text-text-secondary">

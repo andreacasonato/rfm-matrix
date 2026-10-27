@@ -11,9 +11,10 @@ import type { AnalysisHandle } from '../analysis/analysis-client';
 import type { DoneMessage, SaveResult } from '../analysis/protocol';
 import { Toast } from '../components/Toast';
 import { GridPage } from '../grid/GridPage';
+import { MovementScreen } from '../movement/MovementScreen';
 import { RulesScreen } from '../rules/RulesScreen';
 import { SegmentScreen } from '../segment/SegmentScreen';
-import { saveProjectMap } from '../storage/projects';
+import { loadProject, type SnapshotSummary, saveProjectMap } from '../storage/projects';
 import { SaveStatus } from './SaveStatus';
 
 /** The project an analysis belongs to; `sourceFileName` marks a new analysis to save. */
@@ -32,9 +33,14 @@ type Props = {
   /** None for the sample, which is never saved. */
   project?: ProjectContext;
   saveMap?: typeof saveProjectMap;
+  load?: typeof loadProject;
 };
 
-type View = { name: 'grid' } | { name: 'segment'; id: string } | { name: 'rules' };
+type View =
+  | { name: 'grid' }
+  | { name: 'segment'; id: string }
+  | { name: 'rules' }
+  | { name: 'movement'; snapshots: SnapshotSummary[] };
 
 export function AnalysisView({
   result,
@@ -43,13 +49,15 @@ export function AnalysisView({
   handle,
   project,
   saveMap = saveProjectMap,
+  load = loadProject,
 }: Props) {
   const [map, setMap] = useState<SegmentMap>(project?.map ?? defaultSegmentMap);
   const [shown, setShown] = useState(result);
   const [view, setView] = useState<View>({ name: 'grid' });
   const [toast, setToast] = useState<string | null>(null);
   const [saved, setSaved] = useState<SaveResult | 'saving' | null>(null);
-  const projectId = useRef(project?.id);
+  // Known once this analysis is saved, or from the start when a saved project was opened.
+  const [projectId, setProjectId] = useState(project?.id);
   const saveStarted = useRef(false);
 
   useEffect(() => {
@@ -65,7 +73,7 @@ export function AnalysisView({
         map: project.map,
       })
       .then((outcome) => {
-        if (outcome.ok) projectId.current = outcome.projectId;
+        if (outcome.ok) setProjectId(outcome.projectId);
         setSaved(outcome);
       });
   }, [project, handle]);
@@ -78,12 +86,16 @@ export function AnalysisView({
       grid: current.grid.map((cell) => ({ ...cell, segmentId: rfSegment(next, cell.r, cell.f) })),
     }));
     setView({ name: 'grid' });
-    const id = projectId.current;
-    if (!id) return setToast('Segment rules saved');
-    void saveMap(id, next).then(
+    if (!projectId) return setToast('Segment rules saved');
+    void saveMap(projectId, next).then(
       () => setToast('Segment rules saved on this device'),
       () => setToast('Segment rules changed, but could not be saved on this device'),
     );
+  }
+
+  async function showMovement() {
+    const loaded = projectId ? await load(projectId) : undefined;
+    setView({ name: 'movement', snapshots: loaded?.snapshots ?? [] });
   }
 
   const segment = view.name === 'segment' && map.segments.find((s) => s.id === view.id);
@@ -99,6 +111,7 @@ export function AnalysisView({
           map={map}
           onOpenSegment={(id) => setView({ name: 'segment', id })}
           onEditRules={() => setView({ name: 'rules' })}
+          {...(projectId ? { onMovement: () => void showMovement() } : {})}
         />
       )}
       {segment && summary && (
@@ -120,6 +133,14 @@ export function AnalysisView({
           session={handle.session}
           onSave={saveRules}
           onClose={() => setView({ name: 'grid' })}
+        />
+      )}
+      {view.name === 'movement' && (
+        <MovementScreen
+          snapshots={view.snapshots}
+          map={map}
+          onBack={() => setView({ name: 'grid' })}
+          onExported={setToast}
         />
       )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}
