@@ -31,6 +31,8 @@ type Props = {
   summarise?: typeof startSummary;
   /** A saved project's last choices, for its next export (journey 4). */
   previous?: { cleaning?: CleaningRules; scoring?: ScoringMethods };
+  /** The analysis date answered on first upload (S11). */
+  startDate?: Pick<Choices, 'dateMode' | 'customDate'>;
 };
 
 type Load =
@@ -64,7 +66,17 @@ function rulesFrom(choices: Choices): CleaningRules | undefined {
 }
 
 export function CleanScreen(props: Props) {
-  const { fileName, file, plan, format, onBack, onRun, summarise = startSummary, previous } = props;
+  const {
+    fileName,
+    file,
+    plan,
+    format,
+    onBack,
+    onRun,
+    summarise = startSummary,
+    previous,
+    startDate,
+  } = props;
   const [load, setLoad] = useState<Load>({ status: 'reading', rowsRead: 0 });
   const [choices, setChoices] = useState<Choices | undefined>();
   const [scoring, setScoring] = useState<ScoringChoices>(() =>
@@ -77,7 +89,8 @@ export function CleanScreen(props: Props) {
     );
     job.result.then(
       ({ summary }) => {
-        setChoices(choicesFromRules(previous?.cleaning ?? defaultCleaning(summary, plan)));
+        const start = choicesFromRules(previous?.cleaning ?? defaultCleaning(summary, plan));
+        setChoices({ ...start, ...startDate });
         setLoad({ status: 'ready', summary });
       },
       (error: Error) => {
@@ -85,7 +98,7 @@ export function CleanScreen(props: Props) {
       },
     );
     return () => job.cancel();
-  }, [summarise, file, plan, format, previous?.cleaning]);
+  }, [summarise, file, plan, format, previous?.cleaning, startDate]);
 
   const summary = load.status === 'ready' ? load.summary : undefined;
   const rules = choices && rulesFrom(choices);

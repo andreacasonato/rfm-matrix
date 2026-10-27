@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // Synthetic orders for 10 customers (S8 needs at least 5 to score).
 const csv = [
@@ -24,7 +25,7 @@ async function analyseFile(page: Page) {
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
   });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   await page.getByRole('button', { name: 'Run analysis' }).click();
   await expect(page.getByText('Saved on this device.')).toBeVisible();
@@ -106,7 +107,7 @@ test.describe('saving on this device (S8)', () => {
       mimeType: 'text/csv',
       buffer: Buffer.from(later),
     });
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await expect(page.getByText('Columns matched by name from your last analysis')).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Order ID' })).toHaveValue('2');
     await expect(page.getByRole('combobox', { name: 'Amount', exact: true })).toHaveValue('0');

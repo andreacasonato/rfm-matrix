@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 const csv = [
   'Order,Customer ID,Date,Total',
@@ -13,7 +14,7 @@ test('Delete all data leaves nothing on the device (S8, APP_FLOW)', async ({ pag
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
   });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   await page.getByRole('button', { name: 'Run analysis' }).click();
   await expect(page.getByText('Saved on this device.')).toBeVisible();

@@ -1,5 +1,6 @@
 import { gzipSync } from 'node:zlib';
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 const csv = [
   'Order,Customer ID,Email,Date,Total',
@@ -23,7 +24,7 @@ test.describe('project files (S9, story 9)', () => {
       mimeType: 'text/csv',
       buffer: Buffer.from(csv),
     });
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await page.getByRole('button', { name: 'Confirm columns' }).click();
     await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.getByText('Saved on this device.')).toBeVisible();

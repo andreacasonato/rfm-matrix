@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // The Content-Security-Policy (ADR-0015) is only in the production build, which these tests
 // serve. Each test records every violation the page reports.
@@ -48,7 +49,7 @@ test.describe('Content-Security-Policy (M4)', () => {
         ].join('\n'),
       ),
     });
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await page.getByRole('button', { name: 'Confirm columns' }).click();
     await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(

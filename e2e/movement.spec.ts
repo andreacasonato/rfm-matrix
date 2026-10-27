@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 const header = 'Order,Customer ID,Date,Total';
 // Ten customers in spring; by autumn four of them buy again, one is gone and one is new.
@@ -25,7 +26,7 @@ async function analyse(page: Page, name: string, rows: string[]) {
       mimeType: 'text/csv',
       buffer: Buffer.from([header, ...rows].join('\n')),
     });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   await page.getByRole('button', { name: 'Run analysis' }).click();
   await expect(page.getByText('Saved on this device.')).toBeVisible();

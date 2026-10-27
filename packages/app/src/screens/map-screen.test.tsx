@@ -161,4 +161,18 @@ describe('MapScreen', () => {
       amountLevel: 'line',
     });
   });
+
+  it('starts from the first-upload answers (S11)', () => {
+    render(
+      <MapScreen
+        fileName="orders.csv"
+        preview={shopify}
+        onBack={() => {}}
+        onConfirm={() => {}}
+        answers={{ preset: 'other', amountLevel: 'line' }}
+      />,
+    );
+    expect(field('Where is this file from?')).toHaveProperty('value', 'other');
+    expect(screen.getByLabelText(/Each row is a product line/)).toHaveProperty('checked', true);
+  });
 });

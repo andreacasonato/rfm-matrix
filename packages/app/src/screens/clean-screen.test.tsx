@@ -38,6 +38,7 @@ async function renderClean(
   onRun = vi.fn(),
   result: FileSummary = summary,
   previous?: Parameters<typeof CleanScreen>[0]['previous'],
+  startDate?: Parameters<typeof CleanScreen>[0]['startDate'],
 ) {
   const summarise = vi.fn(() => ({
     result: Promise.resolve<SummaryDoneMessage>({ type: 'summary-done', summary: result }),
@@ -53,6 +54,7 @@ async function renderClean(
       onRun={onRun}
       summarise={summarise}
       {...(previous ? { previous } : {})}
+      {...(startDate ? { startDate } : {})}
     />,
   );
   await act(async () => {});
@@ -176,5 +178,14 @@ describe('CleanScreen scoring (S4, TRD §8 rules 5–7)', () => {
       cleaning: { excludedStatuses: [], subtractRefunds: false, lookbackDays: 365 },
       scoring: { f: { method: 'quantile' } },
     });
+  });
+
+  it('starts from the analysis date answered on first upload (S11)', async () => {
+    await renderClean(vi.fn(), summary, undefined, {
+      dateMode: 'custom',
+      customDate: '2026-04-30',
+    });
+    expect(screen.getByLabelText('Another date')).toHaveProperty('checked', true);
+    expect(screen.getByLabelText('Analysis date')).toHaveProperty('value', '2026-04-30');
   });
 });

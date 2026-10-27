@@ -1,5 +1,6 @@
 import { resolve } from 'node:path';
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // The bundled sample: 2,000 synthetic rows; 540 customers after default cleaning.
 const samplePath = resolve('packages/app/public/sample-orders.csv');
@@ -32,7 +33,7 @@ test.describe('upload and preview (S1)', () => {
     await expect(page.getByLabel('Separator')).toHaveValue(',');
     await expect(page.getByLabel('Text encoding')).toHaveValue('utf-8');
 
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await page.getByRole('button', { name: 'Confirm columns' }).click();
     await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.locator('td[data-total-customers]')).toHaveAttribute(

@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 async function upload(page: Page, name: string, csv: string) {
   await page.goto('/');
@@ -8,7 +9,7 @@ async function upload(page: Page, name: string, csv: string) {
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
   });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
 }
 
 async function result(page: Page) {

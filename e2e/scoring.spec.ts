@@ -1,4 +1,5 @@
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // Putler's 15-customer example (packages/core/src/fixtures/putler-15.ts) written as orders:
 // each customer's last order is `recency` days before 2026-01-01 and their orders add up to
@@ -42,7 +43,7 @@ async function analyse(page: Page, frequency: 'quantile' | 'fixed') {
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
   });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   await page.getByLabel('Another date').check();
   await page.getByLabel('Analysis date').fill('2026-01-01');

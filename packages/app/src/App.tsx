@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
 import { Page } from './components/Page';
 import { ProjectDataScreen } from './data/ProjectDataScreen';
+import { type Onboarding, OnboardingScreen } from './onboarding/OnboardingScreen';
 import { loadSample } from './sample';
 import type { ProjectContext } from './screens/AnalysisView';
 import { CleanScreen } from './screens/CleanScreen';
@@ -12,23 +13,23 @@ import { type AnalysisInput, ResultsScreen } from './screens/ResultsScreen';
 import { StartScreen } from './screens/StartScreen';
 import { UploadScreen } from './screens/UploadScreen';
 import { type IntoProject, openSavedProject, projectForUpload } from './storage/open-project';
+import { markOnboardingDone, readSettings } from './storage/settings';
 import { useSavedProjects } from './storage/use-saved-projects';
 import { probeStorage, type StorageState } from './storage-probe';
 
 type Screen =
   | { name: 'start'; notice?: string }
   | { name: 'data' }
-  // `into`: a saved project the new export is added to (journey 4).
-  | { name: 'upload'; into?: IntoProject }
-  | { name: 'map'; file: File; preview: CsvPreview; into?: IntoProject }
-  | {
+  | ({ name: 'upload' } & Carry)
+  | ({ name: 'questions'; file: File; preview: CsvPreview } & Carry)
+  | ({ name: 'map'; file: File; preview: CsvPreview } & Carry)
+  | ({
       name: 'clean';
       file: File;
       preview: CsvPreview;
       plan: AnalysisPlan;
       format: CsvFormat;
-      into?: IntoProject;
-    }
+    } & Carry)
   | {
       name: 'results';
       label: string;
@@ -37,8 +38,13 @@ type Screen =
       into?: IntoProject;
     };
 
-/** Carries the project a new export goes into from screen to screen. */
-const keep = (into?: IntoProject) => (into ? { into } : {});
+/** Carried through upload: the saved project a new export goes into (journey 4), and the
+ * first-upload answers (S11). */
+type Carry = { into?: IntoProject; answers?: Onboarding };
+const keep = ({ into, answers }: Carry) => ({
+  ...(into ? { into } : {}),
+  ...(answers ? { answers } : {}),
+});
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' });
@@ -47,6 +53,15 @@ export function App() {
     void probeStorage().then(setStorage);
   }, []);
   const projects = useSavedProjects(storage === 'available' && screen.name === 'start');
+  // The first-upload questions, until answered or skipped once (S11).
+  const [ask, setAsk] = useState(true);
+  useEffect(() => {
+    if (storage === 'available') void readSettings().then((s) => setAsk(!s.onboardingDone));
+  }, [storage]);
+  function questionsDone() {
+    setAsk(false);
+    if (storage === 'available') void markOnboardingDone();
+  }
 
   async function openProject(id: string) {
     const opened = await openSavedProject(id);
@@ -89,17 +104,35 @@ export function App() {
       {screen.name === 'upload' && (
         <UploadScreen
           onBack={start}
-          onContinue={(file, preview) =>
-            setScreen({ name: 'map', file, preview, ...keep(screen.into) })
-          }
+          onContinue={(file, preview) => {
+            const next = { file, preview, ...keep(screen) };
+            setScreen(
+              !screen.into && ask ? { name: 'questions', ...next } : { name: 'map', ...next },
+            );
+          }}
+        />
+      )}
+      {screen.name === 'questions' && (
+        <OnboardingScreen
+          fileName={screen.file.name}
+          preview={screen.preview}
+          onDone={(answers) => {
+            questionsDone();
+            setScreen({ ...screen, name: 'map', answers });
+          }}
+          onSkip={() => {
+            questionsDone();
+            setScreen({ ...screen, name: 'map' });
+          }}
         />
       )}
       {screen.name === 'map' && (
         <MapScreen
           fileName={screen.file.name}
           preview={screen.preview}
-          onBack={() => setScreen({ name: 'upload', ...keep(screen.into) })}
+          onBack={() => setScreen({ name: 'upload', ...keep(screen) })}
           {...(screen.into ? { previous: screen.into.mapping } : {})}
+          {...(screen.answers ? { answers: screen.answers } : {})}
           onConfirm={(plan) =>
             setScreen({
               ...screen,
@@ -122,10 +155,11 @@ export function App() {
               name: 'map',
               file: screen.file,
               preview: screen.preview,
-              ...keep(screen.into),
+              ...keep(screen),
             })
           }
           {...(screen.into ? { previous: screen.into } : {})}
+          {...(screen.answers ? { startDate: screen.answers } : {})}
           onRun={(chosen) => {
             const { file, format, into } = screen;
             const project = projectForUpload(file.name, into);
@@ -147,7 +181,7 @@ export function App() {
           onStartOver={start}
           {...(screen.project ? { project: screen.project } : {})}
           {...(screen.into
-            ? { onUploadNew: () => setScreen({ name: 'upload', ...keep(screen.into) }) }
+            ? { onUploadNew: () => setScreen({ name: 'upload', ...keep(screen) }) }
             : {})}
         />
       )}

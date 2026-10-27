@@ -21,6 +21,7 @@ import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { initialPlan } from '../mapping/initial-plan';
 import { columnNamesOf, mappingFromPrevious } from '../mapping/previous-settings';
+import type { Onboarding } from '../onboarding/OnboardingScreen';
 import type { StoredMapping } from '../storage/schema';
 import { formatAmount, formatDay } from './format';
 import { MappingRow, type Need } from './MappingRow';
@@ -33,6 +34,8 @@ type Props = {
   onConfirm(plan: AnalysisPlan): void;
   /** A saved project's last mapping, for its next export (journey 4). */
   previous?: StoredMapping;
+  /** The first-upload answers (S11). */
+  answers?: Pick<Onboarding, 'preset' | 'amountLevel'>;
 };
 
 const fields: [Field, Need][] = [
@@ -56,14 +59,16 @@ function samplesOf(preview: CsvPreview, index: number | undefined): string[] {
   return [...new Set(values)].slice(0, 3);
 }
 
-export function MapScreen({ fileName, preview, onBack, onConfirm, previous }: Props) {
-  const [initial] = useState(() => initialPlan(preview));
+export function MapScreen({ fileName, preview, onBack, onConfirm, previous, answers }: Props) {
+  const [initial] = useState(() => initialPlan(preview, answers?.preset));
   const [matched] = useState(() => previous && mappingFromPrevious(preview.header, previous));
   const [preset, setPreset] = useState<PresetId>(initial.preset);
   const [mapping, setMapping] = useState<ColumnMapping>(matched?.mapping ?? initial.plan.mapping);
   const [chosenDecimal, setChosenDecimal] = useState(previous?.read.decimal);
   const [chosenOrder, setChosenOrder] = useState(previous?.read.dateOrder);
-  const [amountLevel, setAmountLevel] = useState<AmountLevel>(previous?.amountLevel ?? 'order');
+  const [amountLevel, setAmountLevel] = useState<AmountLevel>(
+    previous?.amountLevel ?? answers?.amountLevel ?? 'order',
+  );
 
   const dateSamples = samplesOf(preview, mapping.orderedAt);
   const detected = detectDateOrder(dateSamples);
