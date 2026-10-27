@@ -74,6 +74,7 @@ export function App() {
           projects={projects}
           onOpenProject={(id) => void openProject(id)}
           onProjectData={() => setScreen({ name: 'data' })}
+          onProjectOpened={(id) => void openProject(id)}
           {...(screen.notice ? { notice: screen.notice } : {})}
         />
       )}

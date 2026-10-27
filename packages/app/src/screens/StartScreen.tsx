@@ -1,6 +1,7 @@
 import { Upload } from 'lucide-react';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
+import { OpenProjectFile } from '../start/OpenProjectFile';
 import type { ProjectSummary } from '../storage/projects';
 import type { StorageState } from '../storage-probe';
 import { formatDay } from './format';
@@ -14,6 +15,8 @@ type Props = {
   projects?: ProjectSummary[];
   onOpenProject?(projectId: string): void;
   onProjectData?(): void;
+  /** After Open project file added a project (S9). */
+  onProjectOpened?(projectId: string): void;
   /** A confirmation to show, e.g. after Delete all data. */
   notice?: string;
 };
@@ -25,6 +28,7 @@ export function StartScreen({
   projects = [],
   onOpenProject,
   onProjectData,
+  onProjectOpened,
   notice,
 }: Props) {
   return (
@@ -43,6 +47,9 @@ export function StartScreen({
             Upload orders
           </Button>
           <Button onClick={onTrySample}>Try sample data</Button>
+          {storage === 'available' && onProjectOpened && (
+            <OpenProjectFile onOpened={onProjectOpened} />
+          )}
         </div>
       </section>
       {projects.length > 0 && (

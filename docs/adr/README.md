@@ -24,7 +24,7 @@ consequences, governance, notes.
 | [0016](0016-security-scans.md) | Dependency and static-analysis scans in CI | Accepted |
 | [0017](0017-file-size-limit.md) | A 320 MB file size limit, and out-of-memory errors | Accepted |
 | [0018](0018-storage-and-accessibility-test-tools.md) | Test tools for storage and accessibility | Accepted |
-| [0019](0019-snapshot-records.md) | How a snapshot is saved: file fingerprint, extra fields, one transaction | Proposed |
+| [0019](0019-snapshot-records.md) | How a snapshot is saved: file fingerprint, extra fields, one transaction | Accepted |
 
 ## Template
 

@@ -1,6 +1,6 @@
 # ADR-0019: How a snapshot is saved: file fingerprint, extra fields, one transaction
 
-- Status: Proposed (awaiting the maintainer's review; built in S8)
+- Status: Accepted (approved by the maintainer on 2026-10-27)
 - Date: 2026-10-26
 
 ## Context

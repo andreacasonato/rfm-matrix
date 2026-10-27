@@ -80,4 +80,13 @@ describe('StartScreen', () => {
       'All data on this device was deleted.',
     );
   });
+
+  it('offers Open project file only when the browser keeps data (S9)', () => {
+    const props = { onUpload: () => {}, onTrySample: () => {}, onProjectOpened: () => {} };
+    render(<StartScreen {...props} storage="available" />);
+    expect(screen.getByRole('button', { name: 'Open project file' })).toBeTruthy();
+    cleanup();
+    render(<StartScreen {...props} storage="unavailable" />);
+    expect(screen.queryByRole('button', { name: 'Open project file' })).toBeNull();
+  });
 });
