@@ -120,7 +120,7 @@ export function OnboardingScreen({ fileName, preview, onDone, onSkip }: Props) {
               type="date"
               value={answers.customDate}
               onChange={(event) => set({ customDate: event.target.value })}
-              className="h-10 rounded-control border border-border bg-surface px-3 text-body text-text-primary"
+              className="h-10 rounded-control border border-control-border bg-surface px-3 text-body text-text-primary"
             />
           </label>
         )}

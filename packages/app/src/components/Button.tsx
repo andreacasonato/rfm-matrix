@@ -18,7 +18,7 @@ const variants: Record<Variant, string> = {
   primary:
     'bg-action-primary text-on-action enabled:hover:brightness-95 enabled:active:brightness-90',
   secondary:
-    'border border-border bg-surface text-text-primary enabled:hover:bg-canvas enabled:active:brightness-95',
+    'border border-control-border bg-surface text-text-primary enabled:hover:bg-canvas enabled:active:brightness-95',
   quiet:
     'px-2 text-action-text underline-offset-4 enabled:hover:underline enabled:active:brightness-90',
   // Destructive actions only (Delete); red is a status colour (DESIGN.md).

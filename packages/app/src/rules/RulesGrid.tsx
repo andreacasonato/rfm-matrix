@@ -13,7 +13,7 @@ type Props = {
 
 const scores = [1, 2, 3, 4, 5] as const;
 const field =
-  'h-10 w-full min-w-0 rounded-control border border-border bg-surface px-2 text-small text-text-primary enabled:hover:bg-canvas';
+  'h-10 w-full min-w-0 rounded-control border border-control-border bg-surface px-2 text-small text-text-primary enabled:hover:bg-canvas';
 
 const customersIn = (counts: number[], r: Score, f: Score, layer: Score | 'all') =>
   (layer === 'all' ? [...scores] : [layer]).reduce<number>(

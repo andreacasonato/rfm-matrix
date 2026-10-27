@@ -8,6 +8,8 @@
   --color-canvas: #eef0f2;
   --color-surface: #ffffff;
   --color-border: #e3e5e8;
+  /* Edges of inputs, selects and buttons: 3:1 against panels and page (WCAG 1.4.11). */
+  --color-control-border: #80868f;
   --color-text-primary: #16181d;
   --color-text-secondary: #5f6672;
   --color-action-primary: #f2541b;
@@ -64,6 +66,7 @@
     --color-canvas: #0f1115;
     --color-surface: #171a20;
     --color-border: #2a2e36;
+    --color-control-border: #68707d;
     --color-text-primary: #eceef1;
     --color-text-secondary: #a3a9b4;
     --color-action-primary: #ff6a33;
@@ -86,6 +89,7 @@
   --color-canvas: #0f1115;
   --color-surface: #171a20;
   --color-border: #2a2e36;
+  --color-control-border: #68707d;
   --color-text-primary: #eceef1;
   --color-text-secondary: #a3a9b4;
   --color-action-primary: #ff6a33;

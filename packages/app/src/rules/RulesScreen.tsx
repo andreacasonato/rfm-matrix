@@ -99,7 +99,7 @@ export function RulesScreen({ saved, segments, cellCustomers, session, onSave, o
             {layers.map((m) => (
               <label
                 key={m}
-                className="flex h-10 cursor-pointer items-center rounded-control border border-border px-3 has-checked:bg-canvas has-checked:font-semibold"
+                className="flex h-10 cursor-pointer items-center rounded-control border border-control-border px-3 has-checked:bg-canvas has-checked:font-semibold"
               >
                 <input
                   type="radio"

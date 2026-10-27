@@ -25,7 +25,7 @@ type Props = {
 
 const panel = 'flex flex-col gap-3 rounded-panel border border-border bg-surface p-6';
 const field =
-  'h-10 rounded-control border border-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control border border-control-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas';
 const choice = 'flex items-start gap-2';
 const tick = 'mt-1 accent-action-primary';
 const hint = 'text-small text-text-secondary';

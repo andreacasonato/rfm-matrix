@@ -54,7 +54,7 @@ export function DeleteAllDialog({ projects, snapshots, deleteAll, onCancel, onDe
             value={typed}
             autoComplete="off"
             onChange={(event) => setTyped(event.target.value)}
-            className="h-10 rounded-control border border-border bg-surface px-3 text-body text-text-primary"
+            className="h-10 rounded-control border border-control-border bg-surface px-3 text-body text-text-primary"
           />
         </label>
         {state === 'blocked' && (

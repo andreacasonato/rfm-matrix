@@ -43,7 +43,7 @@ const outside: Record<string, string> = {
   [notInLater]: 'Not in later analysis',
 };
 const field =
-  'h-10 rounded-control border border-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control border border-control-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas';
 const label = (s: SnapshotSummary) =>
   `${formatDay(Date.parse(`${s.analysisDate}T00:00:00Z`))} · ${s.sourceFileName}`;
 

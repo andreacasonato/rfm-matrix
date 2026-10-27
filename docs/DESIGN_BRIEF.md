@@ -61,6 +61,7 @@ Contrast ratios use the WCAG 2 relative-luminance formula; AA needs 4.5:1 for no
 | `--color-canvas` | #EEF0F2 | Page background | — |
 | `--color-surface` | #FFFFFF | Panels and tables | — |
 | `--color-border` | #E3E5E8 | Dividers | Decorative only |
+| `--color-control-border` | #80868F | Edges of inputs, selects and buttons (added in M5) | 3.67:1 on white; 3.21:1 on canvas (WCAG 1.4.11 needs 3:1) |
 | `--color-text-primary` | #16181D | Main text, tooltip background | 17.76:1 on white |
 | `--color-text-secondary` | #5F6672 | Labels, helper text | 5.78:1 on white; 5.06:1 on canvas |
 | `--color-action-primary` | #F2541B | Primary button fill, focus item, top heat step | Dark text 5.12:1 (white 3.47:1 fails, so buttons use dark text) |
@@ -79,6 +80,7 @@ Same token names; follows the system setting with a manual toggle.
 | `--color-canvas` | #0F1115 | — |
 | `--color-surface` | #171A20 | — |
 | `--color-border` | #2A2E36 | Decorative only |
+| `--color-control-border` | #68707D | 3.49:1 on surface; 3.78:1 on canvas |
 | `--color-text-primary` | #ECEEF1 | 14.99:1 on surface |
 | `--color-text-secondary` | #A3A9B4 | 7.38:1 on surface; 8.00:1 on canvas |
 | `--color-action-primary` | #FF6A33 | Dark text #16181D 6.23:1 |
