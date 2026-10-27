@@ -3,6 +3,9 @@ import type {
   CsvFormat,
   PreviewDoneMessage,
   PreviewProgressMessage,
+  ProgressMessage,
+  ProjectExportedMessage,
+  ProjectImportedMessage,
   ReadFailure,
   SaveRequest,
   SessionReply,
@@ -119,4 +122,22 @@ export const startSummary = (
     'summary-done',
     'summary-progress',
     onProgress,
+  );
+
+/** Save project file (S9): the project as a compressed file, built in a worker. */
+export const startProjectExport = (projectId: string): JobHandle<ProjectExportedMessage> =>
+  startJob<ProjectExportedMessage, ProgressMessage>(
+    { type: 'export-project', projectId },
+    'project-exported',
+    'progress',
+    () => {},
+  );
+
+/** Open project file (S9): checked and added as a new project, in a worker. */
+export const startProjectImport = (file: Blob): JobHandle<ProjectImportedMessage> =>
+  startJob<ProjectImportedMessage, ProgressMessage>(
+    { type: 'import-project', file },
+    'project-imported',
+    'progress',
+    () => {},
   );

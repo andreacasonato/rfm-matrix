@@ -64,7 +64,25 @@ export type SaveResult =
   | { ok: false; storageFull: boolean; message: string };
 export type SaveReply = { type: 'saved'; requestId: number; result: SaveResult };
 
+/** Save project file and Open project file run in a worker, off the page (S9). */
+export type ProjectFileRequest =
+  | { type: 'export-project'; projectId: string }
+  | { type: 'import-project'; file: Blob };
+export type ProjectExportedMessage = {
+  type: 'project-exported';
+  file: Blob;
+  name: string;
+  hasEmail: boolean;
+};
+export type ProjectImportedMessage = {
+  type: 'project-imported';
+  result:
+    | { ok: true; projectId: string; latestSnapshotId: string | undefined }
+    | { ok: false; problems: string[] };
+};
+
 export type WorkerRequest =
+  | ProjectFileRequest
   | StartMessage
   | OpenMessage
   | PreviewRequest
@@ -149,4 +167,6 @@ export type WorkerMessage =
   | PreviewDoneMessage
   | SummaryProgressMessage
   | SummaryDoneMessage
+  | ProjectExportedMessage
+  | ProjectImportedMessage
   | SessionReply;

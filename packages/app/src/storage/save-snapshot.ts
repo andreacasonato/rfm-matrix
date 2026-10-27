@@ -6,14 +6,13 @@ import type { SaveReply, SaveRequest, SaveResult } from '../analysis/protocol';
 import type { Analysis } from '../analysis/run-analysis';
 import type { CustomerTable } from '../segment/customer-table';
 import { resegment } from '../segment/resegment';
+import { defaultBatchSize, putInBatches } from './customer-writes';
 import { openDb } from './db';
 import { fileFingerprint } from './fingerprint';
 import type { CustomerScoreRecord, ProjectRecord, StoredMapping } from './schema';
 
 /** The project file and database layout version (SCHEMA.md). */
 export const schemaVersion = 1;
-
-const defaultBatchSize = 5_000;
 
 function customerRecord(table: CustomerTable, i: number, snapshotId: string): CustomerScoreRecord {
   const email = table.emails?.[i];
@@ -112,18 +111,12 @@ export async function handleSave(
       customerCount: table.keys.length,
       report: meta.report,
     });
-    const scores = tx.objectStore('customerScores');
-    // Written in batches inside the one transaction: waiting for each batch keeps at most
-    // `batchSize` records queued, which kept 1M rows under the memory limit (ADR-0019).
-    let batch: Promise<unknown>[] = [];
-    for (let i = 0; i < table.keys.length; i++) {
-      batch.push(scores.put(customerRecord(table, i, snapshotId)));
-      if (batch.length === batchSize) {
-        await Promise.all(batch);
-        batch = [];
-      }
-    }
-    await Promise.all(batch);
+    await putInBatches(
+      tx.objectStore('customerScores'),
+      table.keys.length,
+      (i) => customerRecord(table, i, snapshotId),
+      batchSize,
+    );
     await tx.done;
     return reply({ ok: true, projectId: project.id, snapshotId });
   } catch (error) {
