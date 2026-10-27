@@ -69,6 +69,20 @@ export {
   validateMapping,
 } from './presets';
 export type {
+  CustomerColumns,
+  FileMapping,
+  ProjectFile,
+  ProjectFileLimits,
+  ProjectFileResult,
+  ProjectFileSnapshot,
+} from './project-file';
+export {
+  projectFileLimits,
+  projectFileToJson,
+  projectFileVersion,
+  readProjectFile,
+} from './project-file';
+export type {
   BinSizes,
   Dimension,
   DimensionMethod,
