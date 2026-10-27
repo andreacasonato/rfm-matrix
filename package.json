@@ -15,6 +15,7 @@
     "check:csp": "node tools/checks/check-csp.ts packages/app/dist",
     "bench:generate": "node tools/bench/generate.ts",
     "bench:run": "pnpm build && node tools/bench/run.ts",
+    "bench:ci": "pnpm build && node tools/bench/generate.ts --rows 100000 && node tools/bench/run.ts --rows 100000 --runs 5",
     "test:e2e": "pnpm build && playwright test"
   },
   "devDependencies": {
