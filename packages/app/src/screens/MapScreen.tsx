@@ -3,7 +3,6 @@ import {
   type AmountLevel,
   type ColumnMapping,
   type DateOrder,
-  type DecimalSeparator,
   detectDateOrder,
   detectDecimal,
   type Field,
@@ -21,6 +20,8 @@ import type { AnalysisPlan } from '../analysis/protocol';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { initialPlan } from '../mapping/initial-plan';
+import { columnNamesOf, mappingFromPrevious } from '../mapping/previous-settings';
+import type { StoredMapping } from '../storage/schema';
 import { formatAmount, formatDay } from './format';
 import { MappingRow, type Need } from './MappingRow';
 import { ReadOptions } from './ReadOptions';
@@ -30,6 +31,8 @@ type Props = {
   preview: CsvPreview;
   onBack(): void;
   onConfirm(plan: AnalysisPlan): void;
+  /** A saved project's last mapping, for its next export (journey 4). */
+  previous?: StoredMapping;
 };
 
 const fields: [Field, Need][] = [
@@ -53,13 +56,14 @@ function samplesOf(preview: CsvPreview, index: number | undefined): string[] {
   return [...new Set(values)].slice(0, 3);
 }
 
-export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
+export function MapScreen({ fileName, preview, onBack, onConfirm, previous }: Props) {
   const [initial] = useState(() => initialPlan(preview));
+  const [matched] = useState(() => previous && mappingFromPrevious(preview.header, previous));
   const [preset, setPreset] = useState<PresetId>(initial.preset);
-  const [mapping, setMapping] = useState<ColumnMapping>(initial.plan.mapping);
-  const [chosenDecimal, setChosenDecimal] = useState<DecimalSeparator | undefined>();
-  const [chosenOrder, setChosenOrder] = useState<DateOrder | undefined>();
-  const [amountLevel, setAmountLevel] = useState<AmountLevel>('order');
+  const [mapping, setMapping] = useState<ColumnMapping>(matched?.mapping ?? initial.plan.mapping);
+  const [chosenDecimal, setChosenDecimal] = useState(previous?.read.decimal);
+  const [chosenOrder, setChosenOrder] = useState(previous?.read.dateOrder);
+  const [amountLevel, setAmountLevel] = useState<AmountLevel>(previous?.amountLevel ?? 'order');
 
   const dateSamples = samplesOf(preview, mapping.orderedAt);
   const detected = detectDateOrder(dateSamples);
@@ -94,6 +98,13 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
           Back
         </Button>
       </div>
+      {matched && (
+        <Notice tone="info" title="Columns matched by name from your last analysis">
+          {matched.missing.length > 0 && (
+            <p>Not in this file: {matched.missing.map((f) => fieldLabels[f]).join(', ')}.</p>
+          )}
+        </Notice>
+      )}
       <section className="flex flex-col gap-3 rounded-panel border border-border bg-surface p-6">
         <label className="flex flex-col gap-1 text-small text-text-secondary">
           Where is this file from?
@@ -169,7 +180,9 @@ export function MapScreen({ fileName, preview, onBack, onConfirm }: Props) {
           variant="primary"
           disabled={!ready}
           onClick={() => {
-            if (dateOrder) onConfirm({ mapping, read: { decimal, dateOrder }, amountLevel });
+            if (!dateOrder) return;
+            const columnNames = columnNamesOf(mapping, preview.header);
+            onConfirm({ mapping, columnNames, read: { decimal, dateOrder }, amountLevel });
           }}
         >
           Confirm columns

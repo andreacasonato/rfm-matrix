@@ -1,11 +1,17 @@
 // "Clean and settings" (APP_FLOW): which orders count? Counts update as choices change.
-import { type CleaningRules, orderCounts, statusCounts } from '@rfm-matrix/core';
+import {
+  type CleaningRules,
+  orderCounts,
+  type ScoringMethods,
+  statusCounts,
+} from '@rfm-matrix/core';
 import { useEffect, useState } from 'react';
 import type { AnalysisPlan, CsvFormat, FileSummary } from '../analysis/protocol';
 import { startSummary } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { defaultCleaning } from '../mapping/default-cleaning';
+import { choicesFromRules, scoringChoicesFrom } from '../mapping/previous-settings';
 import { type Choices, CleaningOptions } from './CleaningOptions';
 import { ExclusionCounts } from './ExclusionCounts';
 import {
@@ -23,6 +29,8 @@ type Props = {
   onBack(): void;
   onRun(plan: AnalysisPlan): void;
   summarise?: typeof startSummary;
+  /** A saved project's last choices, for its next export (journey 4). */
+  previous?: { cleaning?: CleaningRules; scoring?: ScoringMethods };
 };
 
 type Load =
@@ -56,10 +64,12 @@ function rulesFrom(choices: Choices): CleaningRules | undefined {
 }
 
 export function CleanScreen(props: Props) {
-  const { fileName, file, plan, format, onBack, onRun, summarise = startSummary } = props;
+  const { fileName, file, plan, format, onBack, onRun, summarise = startSummary, previous } = props;
   const [load, setLoad] = useState<Load>({ status: 'reading', rowsRead: 0 });
   const [choices, setChoices] = useState<Choices | undefined>();
-  const [scoring, setScoring] = useState<ScoringChoices>(defaultScoringChoices);
+  const [scoring, setScoring] = useState<ScoringChoices>(() =>
+    previous?.scoring ? scoringChoicesFrom(previous.scoring) : defaultScoringChoices,
+  );
 
   useEffect(() => {
     const job = summarise(file, plan, format, ({ rowsRead }) =>
@@ -67,16 +77,7 @@ export function CleanScreen(props: Props) {
     );
     job.result.then(
       ({ summary }) => {
-        const defaults = defaultCleaning(summary, plan);
-        setChoices({
-          excluded: new Set(defaults.excludedStatuses),
-          basis: 'gross',
-          subtractRefunds: true,
-          dateMode: 'latest',
-          customDate: '',
-          lookback: '',
-          customDays: '',
-        });
+        setChoices(choicesFromRules(previous?.cleaning ?? defaultCleaning(summary, plan)));
         setLoad({ status: 'ready', summary });
       },
       (error: Error) => {
@@ -84,7 +85,7 @@ export function CleanScreen(props: Props) {
       },
     );
     return () => job.cancel();
-  }, [summarise, file, plan, format]);
+  }, [summarise, file, plan, format, previous?.cleaning]);
 
   const summary = load.status === 'ready' ? load.summary : undefined;
   const rules = choices && rulesFrom(choices);

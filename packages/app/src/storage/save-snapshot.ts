@@ -46,6 +46,7 @@ export async function handleSave(
     const time = now();
     const mapping: StoredMapping = {
       columns: meta.plan.mapping,
+      ...(meta.plan.columnNames ? { columnNames: meta.plan.columnNames } : {}),
       read: meta.plan.read,
       amountLevel: meta.plan.amountLevel,
     };

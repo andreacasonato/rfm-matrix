@@ -19,6 +19,8 @@ type Props = {
   project?: ProjectContext;
   analyse?: typeof startAnalysis;
   open?: typeof openSnapshot;
+  /** Adds a new export to this saved project (journey 4). */
+  onUploadNew?(): void;
 };
 
 /** A file to read, or a saved snapshot to open (S8). */
@@ -51,6 +53,7 @@ export function ResultsScreen({
   project,
   analyse = startAnalysis,
   open = openSnapshot,
+  onUploadNew,
 }: Props) {
   const [state, setState] = useState<State>({ status: 'running' });
   const job = useRef<AnalysisHandle | null>(null);
@@ -107,11 +110,16 @@ export function ResultsScreen({
 
   return (
     <>
-      <div className="flex items-center justify-between gap-4">
-        <h1 className="text-title font-semibold">{label}</h1>
-        <Button variant="quiet" onClick={onStartOver}>
-          Start over
-        </Button>
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <h1 className="text-title font-semibold break-words">{label}</h1>
+        <div className="flex flex-wrap items-center gap-2">
+          {onUploadNew && state.status === 'done' && (
+            <Button onClick={onUploadNew}>Upload new export</Button>
+          )}
+          <Button variant="quiet" onClick={onStartOver}>
+            Start over
+          </Button>
+        </div>
       </div>
       {state.status === 'running' && (
         <section

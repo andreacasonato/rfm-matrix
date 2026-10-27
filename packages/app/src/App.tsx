@@ -1,45 +1,44 @@
 // Screen switching (ADR-0011: a small state machine, no router).
-import { defaultSegmentMap } from '@rfm-matrix/core';
 import type { CsvPreview } from '@rfm-matrix/io';
 import { useEffect, useState } from 'react';
 import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
-import { startPreview, startSummary } from './analysis/worker-client';
 import { Page } from './components/Page';
 import { ProjectDataScreen } from './data/ProjectDataScreen';
-import { defaultCleaning } from './mapping/default-cleaning';
-import { initialPlan } from './mapping/initial-plan';
+import { loadSample } from './sample';
 import type { ProjectContext } from './screens/AnalysisView';
 import { CleanScreen } from './screens/CleanScreen';
 import { MapScreen } from './screens/MapScreen';
 import { type AnalysisInput, ResultsScreen } from './screens/ResultsScreen';
 import { StartScreen } from './screens/StartScreen';
 import { UploadScreen } from './screens/UploadScreen';
-import { loadProject } from './storage/projects';
+import { type IntoProject, openSavedProject, projectForUpload } from './storage/open-project';
 import { useSavedProjects } from './storage/use-saved-projects';
 import { probeStorage, type StorageState } from './storage-probe';
 
 type Screen =
   | { name: 'start'; notice?: string }
   | { name: 'data' }
-  | { name: 'upload' }
-  | { name: 'map'; file: File; preview: CsvPreview }
-  | { name: 'clean'; file: File; preview: CsvPreview; plan: AnalysisPlan; format: CsvFormat }
-  | { name: 'results'; label: string; load(): Promise<AnalysisInput>; project?: ProjectContext };
+  // `into`: a saved project the new export is added to (journey 4).
+  | { name: 'upload'; into?: IntoProject }
+  | { name: 'map'; file: File; preview: CsvPreview; into?: IntoProject }
+  | {
+      name: 'clean';
+      file: File;
+      preview: CsvPreview;
+      plan: AnalysisPlan;
+      format: CsvFormat;
+      into?: IntoProject;
+    }
+  | {
+      name: 'results';
+      label: string;
+      load(): Promise<AnalysisInput>;
+      project?: ProjectContext;
+      into?: IntoProject;
+    };
 
-/** "orders-2026.csv" → "orders-2026": the name of a new project. */
-const projectName = (fileName: string) => fileName.replace(/\.[^.]+$/, '') || fileName;
-
-async function loadSample(): Promise<AnalysisInput> {
-  // A static file of the app itself, same origin (ADR-0010 notes).
-  const response = await fetch('sample-orders.csv');
-  if (!response.ok) throw new Error(`The sample data could not be loaded (${response.status}).`);
-  const source = await response.blob();
-  // The sample goes through the same preview, guess and default cleaning as an uploaded file.
-  const { preview } = await startPreview(source, {}, () => {}).result;
-  const { plan } = initialPlan(preview);
-  const { summary } = await startSummary(source, plan, {}, () => {}).result;
-  return { source, plan: { ...plan, cleaning: defaultCleaning(summary, plan) }, format: {} };
-}
+/** Carries the project a new export goes into from screen to screen. */
+const keep = (into?: IntoProject) => (into ? { into } : {});
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' });
@@ -50,21 +49,14 @@ export function App() {
   const projects = useSavedProjects(storage === 'available' && screen.name === 'start');
 
   async function openProject(id: string) {
-    const loaded = await loadProject(id);
-    const latest = loaded?.snapshots.at(-1);
-    if (!loaded || !latest) return;
-    const { project, map } = loaded;
-    const { columns } = project.columnMapping;
-    const input: AnalysisInput = {
-      snapshotId: latest.id,
-      map,
-      hasEmail: columns.email !== undefined && columns.customerId !== undefined,
-    };
+    const opened = await openSavedProject(id);
+    if (!opened) return;
     setScreen({
       name: 'results',
-      label: project.name,
-      load: () => Promise.resolve(input),
-      project: { id: project.id, name: project.name, map },
+      label: opened.project.name,
+      load: () => Promise.resolve(opened.input),
+      project: opened.project,
+      into: opened.into,
     });
   }
 
@@ -96,14 +88,17 @@ export function App() {
       {screen.name === 'upload' && (
         <UploadScreen
           onBack={start}
-          onContinue={(file, preview) => setScreen({ name: 'map', file, preview })}
+          onContinue={(file, preview) =>
+            setScreen({ name: 'map', file, preview, ...keep(screen.into) })
+          }
         />
       )}
       {screen.name === 'map' && (
         <MapScreen
           fileName={screen.file.name}
           preview={screen.preview}
-          onBack={() => setScreen({ name: 'upload' })}
+          onBack={() => setScreen({ name: 'upload', ...keep(screen.into) })}
+          {...(screen.into ? { previous: screen.into.mapping } : {})}
           onConfirm={(plan) =>
             setScreen({
               ...screen,
@@ -121,23 +116,25 @@ export function App() {
           file={screen.file}
           plan={screen.plan}
           format={screen.format}
-          onBack={() => setScreen({ name: 'map', file: screen.file, preview: screen.preview })}
-          onRun={(plan) => {
-            const { file, format } = screen;
+          onBack={() =>
+            setScreen({
+              name: 'map',
+              file: screen.file,
+              preview: screen.preview,
+              ...keep(screen.into),
+            })
+          }
+          {...(screen.into ? { previous: screen.into } : {})}
+          onRun={(chosen) => {
+            const { file, format, into } = screen;
+            const project = projectForUpload(file.name, into);
+            const plan = { ...chosen, segmentMap: project.map };
             setScreen({
               name: 'results',
               label: file.name,
               load: () => Promise.resolve({ source: file, plan, format }),
-              // Saved as a new project when this browser lets the app keep data (S8).
-              ...(storage === 'available'
-                ? {
-                    project: {
-                      name: projectName(file.name),
-                      sourceFileName: file.name,
-                      map: defaultSegmentMap,
-                    },
-                  }
-                : {}),
+              // Saved when this browser lets the app keep data (S8).
+              ...(storage === 'available' ? { project } : {}),
             });
           }}
         />
@@ -148,6 +145,9 @@ export function App() {
           load={screen.load}
           onStartOver={start}
           {...(screen.project ? { project: screen.project } : {})}
+          {...(screen.into
+            ? { onUploadNew: () => setScreen({ name: 'upload', ...keep(screen.into) }) }
+            : {})}
         />
       )}
     </Page>

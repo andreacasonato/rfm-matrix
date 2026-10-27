@@ -4,6 +4,7 @@ import type {
   CleaningCounts,
   CleaningRules,
   ColumnMapping,
+  Field,
   GridCell,
   OrderProfile,
   ReadSettings,
@@ -17,6 +18,8 @@ import type { SegmentPage, Sort } from '../segment/customer-table';
 /** How to turn the file's rows into orders (ADR-0012), confirmed on the Map columns screen. */
 export type AnalysisPlan = {
   mapping: ColumnMapping;
+  /** Header names of the mapped columns, kept with a saved project (journey 4). */
+  columnNames?: Partial<Record<Field, string>>;
   read: ReadSettings;
   amountLevel: AmountLevel;
   /** Chosen on the cleaning screen; without it every order counts. */

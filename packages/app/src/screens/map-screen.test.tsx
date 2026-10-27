@@ -51,6 +51,14 @@ describe('MapScreen', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Confirm columns' }));
     expect(onConfirm).toHaveBeenCalledWith({
       mapping: { orderId: 0, email: 1, orderedAt: 3, amount: 4, status: 2 },
+      // Kept with a saved project, to find the columns again in its next export (journey 4).
+      columnNames: {
+        orderId: 'Name',
+        email: 'Email',
+        orderedAt: 'Created at',
+        amount: 'Total',
+        status: 'Financial Status',
+      },
       read: { decimal: '.', dateOrder: 'dmy' },
       amountLevel: 'line',
     });
@@ -114,5 +122,43 @@ describe('MapScreen', () => {
     expect(field('Where is this file from?')).toHaveProperty('value', 'woocommerce');
     expect(screen.getByText(/check the columns below/)).toBeTruthy();
     expect(field('Customer ID')).toHaveProperty('value', '4');
+  });
+
+  it("starts from the project's last mapping, matched by column name (journey 4)", () => {
+    const onConfirm = vi.fn();
+    const reordered = preview(
+      ['Total', 'Created at', 'Name', 'Email', 'Lineitem name'],
+      [['30.00', '04/03/2026', '#1001', 'a@example.test', 'Mug']],
+    );
+    render(
+      <MapScreen
+        fileName="november.csv"
+        preview={reordered}
+        onBack={() => {}}
+        onConfirm={onConfirm}
+        previous={{
+          columns: { orderId: 0, email: 1, status: 2, orderedAt: 3, amount: 4 },
+          columnNames: {
+            orderId: 'Name',
+            email: 'Email',
+            status: 'Financial Status',
+            orderedAt: 'Created at',
+            amount: 'Total',
+          },
+          read: { decimal: '.', dateOrder: 'mdy' },
+          amountLevel: 'line',
+        }}
+      />,
+    );
+    expect(field('Order ID')).toHaveProperty('value', '2');
+    expect(field('Amount')).toHaveProperty('value', '0');
+    expect(screen.getByRole('status').textContent).toContain('Not in this file: Status');
+    fireEvent.click(screen.getByRole('button', { name: 'Confirm columns' }));
+    expect(onConfirm).toHaveBeenCalledWith({
+      mapping: { orderId: 2, email: 3, orderedAt: 1, amount: 0 },
+      columnNames: { orderId: 'Name', email: 'Email', orderedAt: 'Created at', amount: 'Total' },
+      read: { decimal: '.', dateOrder: 'mdy' },
+      amountLevel: 'line',
+    });
   });
 });

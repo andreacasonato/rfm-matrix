@@ -6,6 +6,7 @@ import type {
   CleaningCounts,
   CleaningRules,
   ColumnMapping,
+  Field,
   ReadSettings,
   Score,
   ScoringMethods,
@@ -16,6 +17,8 @@ import type { DBSchema } from 'idb';
 /** How the file's columns become orders (the Map columns screen). */
 export type StoredMapping = {
   columns: ColumnMapping;
+  /** Header names of the mapped columns, to find them again in the next export (journey 4). */
+  columnNames?: Partial<Record<Field, string>>;
   read: ReadSettings;
   amountLevel: AmountLevel;
 };

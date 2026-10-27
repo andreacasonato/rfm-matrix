@@ -78,4 +78,50 @@ test.describe('saving on this device (S8)', () => {
     await expect(page.getByRole('button', { name: 'Upload orders' })).toBeVisible();
     await expect(page.getByRole('list', { name: 'Saved on this device' })).toHaveCount(0);
   });
+
+  test('a new export goes into the saved project with its columns and rules (journey 4)', async ({
+    page,
+  }) => {
+    await analyseFile(page);
+    await page.getByRole('button', { name: 'Edit segment rules' }).click();
+    await page.getByRole('combobox', { name: 'Segment for R1 F1' }).selectOption('hibernating');
+    await page.getByRole('button', { name: 'Save rules' }).click({ timeout: 2000 });
+    await expect(
+      page.getByText('Segment rules saved on this device', { exact: true }),
+    ).toBeVisible();
+
+    await page.reload();
+    await page.getByRole('button', { name: 'Open my-shop' }).click();
+    await page.getByRole('button', { name: 'Upload new export' }).click();
+    // The same orders a month later, with the columns in another order.
+    const [header = '', ...rows] = csv.split('\n');
+    const order = [4, 3, 0, 2, 1, 5, 6];
+    const reorder = (line: string) => {
+      const cells = line.split(',');
+      return order.map((i) => cells[i]).join(',');
+    };
+    const later = [reorder(header), ...rows.map(reorder)].join('\n');
+    await page.locator('input[type=file]').setInputFiles({
+      name: 'my-shop-november.csv',
+      mimeType: 'text/csv',
+      buffer: Buffer.from(later),
+    });
+    await page.getByRole('button', { name: 'Continue' }).click();
+    await expect(page.getByText('Columns matched by name from your last analysis')).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Order ID' })).toHaveValue('2');
+    await expect(page.getByRole('combobox', { name: 'Amount', exact: true })).toHaveValue('0');
+    await page.getByRole('button', { name: 'Confirm columns' }).click();
+    await page.getByRole('button', { name: 'Run analysis' }).click();
+    await expect(page.getByText('Saved on this device.')).toBeVisible();
+
+    await page.getByRole('button', { name: 'Edit segment rules' }).click();
+    await expect(page.getByRole('combobox', { name: 'Segment for R1 F1' })).toHaveValue(
+      'hibernating',
+    );
+    await page.getByRole('button', { name: 'Back to grid' }).click();
+    await page.getByRole('button', { name: 'Start over' }).click();
+    await expect(page.getByRole('list', { name: 'Saved on this device' })).toContainText(
+      '2 analyses',
+    );
+  });
 });
