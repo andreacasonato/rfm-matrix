@@ -85,6 +85,17 @@ describe('saving an analysis on this device (S8)', () => {
     });
   });
 
+  it('writes every customer when the records go in several batches', async () => {
+    const reply = await handleSave(
+      await analyse(),
+      { type: 'save', requestId: 1, target },
+      { batchSize: 2 },
+    );
+    expect(reply.result.ok).toBe(true);
+    const { customerScores } = await everything();
+    expect(customerScores.map((c) => c.customerKey).sort()).toEqual(['C1', 'C2', 'C3', 'C4', 'C5']);
+  });
+
   it('never stores names, addresses, phone numbers or raw order rows', async () => {
     await save(await analyse());
     const text = JSON.stringify(await everything());

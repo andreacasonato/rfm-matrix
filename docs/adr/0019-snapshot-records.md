@@ -20,7 +20,10 @@ A saved snapshot must also reopen without the file, so it needs the totals the g
   adds `report` (orders, revenue, repeat customers, cleaning counts). `rowCounts.excluded` is
   rows that could not be used; order-level exclusions are in `report.cleaning`.
 - **One transaction** writes the project, its rules, the snapshot and every customer record,
-  so a full disk or a crash saves nothing rather than a partial snapshot.
+  so a full disk or a crash saves nothing rather than a partial snapshot. Customer records go in
+  batches of 5,000 within it, each awaited before the next, so the queue of pending writes
+  stays small: with all 270,814 queued at once the 1M-row benchmark peaked at 1,204 MB, over its
+  1,200 MB limit; batched, 1,107 MB, and the save took 7.4 s (p50) instead of 9.4 s.
 - **The worker saves,** since it already holds the customer table; 270,000 records never pass
   through the page. The page decides when: the sample is never saved.
 

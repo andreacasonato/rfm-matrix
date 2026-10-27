@@ -4,6 +4,7 @@
 import { type Score, validateMap } from '@rfm-matrix/core';
 import type { SaveReply, SaveRequest, SaveResult } from '../analysis/protocol';
 import type { Analysis } from '../analysis/run-analysis';
+import type { CustomerTable } from '../segment/customer-table';
 import { resegment } from '../segment/resegment';
 import { openDb } from './db';
 import { fileFingerprint } from './fingerprint';
@@ -11,6 +12,26 @@ import type { CustomerScoreRecord, ProjectRecord, StoredMapping } from './schema
 
 /** The project file and database layout version (SCHEMA.md). */
 export const schemaVersion = 1;
+
+const defaultBatchSize = 5_000;
+
+function customerRecord(table: CustomerTable, i: number, snapshotId: string): CustomerScoreRecord {
+  const email = table.emails?.[i];
+  return {
+    snapshotId,
+    customerKey: table.keys[i] ?? '',
+    ...(email ? { email } : {}),
+    firstOrderAt: table.firstOrderAt[i] ?? 0,
+    lastOrderAt: table.lastOrderAt[i] ?? 0,
+    recencyDays: table.recencyDays[i] ?? 0,
+    frequency: table.orders[i] ?? 0,
+    monetaryMinor: Math.round((table.spend[i] ?? 0) * 100),
+    r: table.r[i] as Score,
+    f: table.f[i] as Score,
+    m: table.m[i] as Score,
+    segmentId: table.segmentIds[table.segment[i] ?? 0] ?? '',
+  };
+}
 
 export function saveFailure(error: unknown): SaveResult {
   const message = error instanceof Error ? error.message : String(error);
@@ -21,7 +42,7 @@ export function saveFailure(error: unknown): SaveResult {
 export async function handleSave(
   analysis: Analysis | undefined,
   request: SaveRequest,
-  { now = Date.now, newId = () => crypto.randomUUID() } = {},
+  { now = Date.now, newId = () => crypto.randomUUID(), batchSize = defaultBatchSize } = {},
 ): Promise<SaveReply> {
   const reply = (result: SaveResult): SaveReply => ({
     type: 'saved',
@@ -92,25 +113,17 @@ export async function handleSave(
       report: meta.report,
     });
     const scores = tx.objectStore('customerScores');
+    // Written in batches inside the one transaction: waiting for each batch keeps at most
+    // `batchSize` records queued, which kept 1M rows under the memory limit (ADR-0019).
+    let batch: Promise<unknown>[] = [];
     for (let i = 0; i < table.keys.length; i++) {
-      const email = table.emails?.[i];
-      const record: CustomerScoreRecord = {
-        snapshotId,
-        customerKey: table.keys[i] ?? '',
-        ...(email ? { email } : {}),
-        firstOrderAt: table.firstOrderAt[i] ?? 0,
-        lastOrderAt: table.lastOrderAt[i] ?? 0,
-        recencyDays: table.recencyDays[i] ?? 0,
-        frequency: table.orders[i] ?? 0,
-        monetaryMinor: Math.round((table.spend[i] ?? 0) * 100),
-        r: table.r[i] as Score,
-        f: table.f[i] as Score,
-        m: table.m[i] as Score,
-        segmentId: table.segmentIds[table.segment[i] ?? 0] ?? '',
-      };
-      // Not awaited one by one: the requests queue in the transaction, which commits at the end.
-      void scores.put(record);
+      batch.push(scores.put(customerRecord(table, i, snapshotId)));
+      if (batch.length === batchSize) {
+        await Promise.all(batch);
+        batch = [];
+      }
     }
+    await Promise.all(batch);
     await tx.done;
     return reply({ ok: true, projectId: project.id, snapshotId });
   } catch (error) {
