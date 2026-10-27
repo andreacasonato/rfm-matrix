@@ -4,6 +4,7 @@ import { useEffect, useState } from 'react';
 import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
 import { Page } from './components/Page';
 import { ProjectDataScreen } from './data/ProjectDataScreen';
+import { recordStorage } from './diagnostics/diagnostics';
 import { type Onboarding, OnboardingScreen } from './onboarding/OnboardingScreen';
 import { loadSample } from './sample';
 import type { ProjectContext } from './screens/AnalysisView';
@@ -50,7 +51,10 @@ export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' });
   const [storage, setStorage] = useState<StorageState>('checking');
   useEffect(() => {
-    void probeStorage().then(setStorage);
+    void probeStorage().then((state) => {
+      setStorage(state);
+      recordStorage(state);
+    });
   }, []);
   const projects = useSavedProjects(storage === 'available' && screen.name === 'start');
   // The first-upload questions, until answered or skipped once (S11).

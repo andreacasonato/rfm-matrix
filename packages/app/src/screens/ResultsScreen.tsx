@@ -7,6 +7,7 @@ import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../a
 import { WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
+import { recordError, recordRun } from '../diagnostics/diagnostics';
 import { AnalysisView, type ProjectContext } from './AnalysisView';
 import { describeReadFailure } from './unreadable';
 
@@ -39,6 +40,7 @@ const count = (n: number) => n.toLocaleString('en-US');
 const isCancel = (error: unknown) => error instanceof DOMException && error.name === 'AbortError';
 
 function failure(error: Error, rowsRead: number): State {
+  recordError(error.message);
   if (error instanceof WorkerJobError && error.unreadable) {
     const { title, detail } = describeReadFailure(error.unreadable, rowsRead);
     return { status: 'error', title, message: detail };
@@ -81,13 +83,15 @@ export function ResultsScreen({
             : input.plan.mapping.email !== undefined && input.plan.mapping.customerId !== undefined;
         job.current = current;
         current.result.then(
-          (result) =>
+          (result) => {
+            recordRun(result);
             setState({
               status: 'done',
               result,
               wallMs: performance.now() - started,
               hasEmail,
-            }),
+            });
+          },
           (error: Error) => {
             // Cancel rejects the job too; the cancel button has already updated the screen.
             if (!stopped && !isCancel(error)) setState(failure(error, rowsRead));

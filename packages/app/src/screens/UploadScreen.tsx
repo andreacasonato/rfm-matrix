@@ -6,6 +6,7 @@ import { type JobHandle, startPreview, WorkerJobError } from '../analysis/worker
 import { Button } from '../components/Button';
 import { DropZone } from '../components/DropZone';
 import { Notice } from '../components/Notice';
+import { recordError } from '../diagnostics/diagnostics';
 import { FormatControls } from './FormatControls';
 import { PreviewTable } from './PreviewTable';
 import { describeReadFailure } from './unreadable';
@@ -25,6 +26,7 @@ type State =
 const count = (n: number) => n.toLocaleString('en-US');
 
 function describeError(error: unknown, rowsRead: number) {
+  recordError(error instanceof Error ? error.message : String(error));
   if (error instanceof WorkerJobError && error.unreadable)
     return describeReadFailure(error.unreadable, rowsRead);
   const message = error instanceof Error ? error.message : String(error);
