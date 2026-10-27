@@ -1,6 +1,7 @@
 // Runs parsing, previews and scoring off the main thread (ADR-0003). After an analysis the
 // worker keeps its customer table and answers segment questions about it (S6).
 import { handleSessionRequest } from '../segment/session';
+import { exportMovers, runMovement } from '../storage/movement';
 import { runOpenSnapshot } from '../storage/open-snapshot';
 import { exportProject, importProject } from '../storage/project-files';
 import { handleSave } from '../storage/save-snapshot';
@@ -32,6 +33,17 @@ scope.onmessage = (event) => {
     void runOpenSnapshot(request.snapshotId, request.map, post).then((a) => {
       analysis = a;
     });
+  } else if (request.type === 'movement') {
+    runMovement(request.earlierId, request.laterId, request.map).then(
+      (movement) => post({ type: 'movement-done', movement }),
+      (error: unknown) => post(errorMessage(error)),
+    );
+  } else if (request.type === 'export-movers') {
+    const { earlierId, laterId, map, from, to } = request;
+    exportMovers(earlierId, laterId, map, from, to).then(
+      (out) => post({ type: 'movers-exported', ...out }),
+      (error: unknown) => post(errorMessage(error)),
+    );
   } else if (request.type === 'export-project') {
     exportProject(request.projectId).then(
       (saved) => post({ type: 'project-exported', ...saved }),

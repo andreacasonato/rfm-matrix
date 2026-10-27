@@ -1,6 +1,9 @@
+import type { SegmentMap } from '@rfm-matrix/core';
 import type {
   AnalysisPlan,
   CsvFormat,
+  MovementDoneMessage,
+  MoversExportedMessage,
   PreviewDoneMessage,
   PreviewProgressMessage,
   ProgressMessage,
@@ -138,6 +141,30 @@ export const startProjectImport = (file: Blob): JobHandle<ProjectImportedMessage
   startJob<ProjectImportedMessage, ProgressMessage>(
     { type: 'import-project', file },
     'project-imported',
+    'progress',
+    () => {},
+  );
+
+/** Movement between two saved analyses (S10), compared in a worker. */
+export const startMovement = (earlierId: string, laterId: string, map: SegmentMap) =>
+  startJob<MovementDoneMessage, ProgressMessage>(
+    { type: 'movement', earlierId, laterId, map },
+    'movement-done',
+    'progress',
+    () => {},
+  );
+
+/** One flow's customers as a CSV (S10, "Export movers"). */
+export const startMoversExport = (
+  earlierId: string,
+  laterId: string,
+  map: SegmentMap,
+  from: string,
+  to: string,
+) =>
+  startJob<MoversExportedMessage, ProgressMessage>(
+    { type: 'export-movers', earlierId, laterId, map, from, to },
+    'movers-exported',
     'progress',
     () => {},
   );

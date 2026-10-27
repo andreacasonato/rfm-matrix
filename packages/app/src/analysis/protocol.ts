@@ -6,6 +6,7 @@ import type {
   ColumnMapping,
   Field,
   GridCell,
+  Movement,
   OrderProfile,
   ReadSettings,
   ScoringMethods,
@@ -81,7 +82,27 @@ export type ProjectImportedMessage = {
     | { ok: false; problems: string[] };
 };
 
+/** Movement between two saved snapshots, and one flow's customers as CSV (S10). */
+export type MovementRequest =
+  | { type: 'movement'; earlierId: string; laterId: string; map: SegmentMap }
+  | {
+      type: 'export-movers';
+      earlierId: string;
+      laterId: string;
+      map: SegmentMap;
+      from: string;
+      to: string;
+    };
+export type MovementDoneMessage = { type: 'movement-done'; movement: Movement };
+export type MoversExportedMessage = {
+  type: 'movers-exported';
+  file: Blob;
+  name: string;
+  rows: number;
+};
+
 export type WorkerRequest =
+  | MovementRequest
   | ProjectFileRequest
   | StartMessage
   | OpenMessage
@@ -169,4 +190,6 @@ export type WorkerMessage =
   | SummaryDoneMessage
   | ProjectExportedMessage
   | ProjectImportedMessage
+  | MovementDoneMessage
+  | MoversExportedMessage
   | SessionReply;
