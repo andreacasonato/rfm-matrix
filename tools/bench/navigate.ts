@@ -1,4 +1,5 @@
-// Drives the app's real screens: Start → Upload orders → preview → Continue → Confirm columns
+// Drives the app's real screens: Start → Upload orders → preview → Continue → Skip questions →
+// Confirm columns
 // → cleaning summary → Run analysis.
 import type { Page } from '@playwright/test';
 
@@ -16,6 +17,8 @@ export async function previewFile(page: Page, csvPath: string): Promise<number> 
 /** Confirms the guessed columns and waits for the cleaning summary; returns its time in ms. */
 export async function summariseFile(page: Page): Promise<number> {
   await page.getByRole('button', { name: 'Continue' }).click();
+  // A fresh browser asks the first-upload questions (S11); the benchmark keeps the defaults.
+  await page.getByRole('button', { name: 'Skip questions' }).click();
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   const started = Date.now();
   await page.getByRole('button', { name: 'Run analysis' }).waitFor(longWait);

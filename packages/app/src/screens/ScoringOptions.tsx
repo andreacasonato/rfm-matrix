@@ -47,7 +47,7 @@ export function scoringFrom(choices: ScoringChoices) {
 type Props = { choices: ScoringChoices; onChange(choices: ScoringChoices): void };
 
 const field =
-  'h-10 rounded-control border border-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
+  'h-10 rounded-control border border-control-border bg-surface px-3 text-body text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
 
 export function ScoringOptions({ choices, onChange }: Props) {
   const { problems } = scoringFrom(choices);

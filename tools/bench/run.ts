@@ -1,8 +1,8 @@
 // Usage: node tools/bench/run.ts [--rows 1000000] [--runs 20]
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
 // Drives the real screens. Timed from Run analysis to segment counts ready (parse, aggregate,
-// clean, score, segment); the preview's and the cleaning summary's own reads are reported
-// separately.
+// clean, score, segment); the preview's and the cleaning summary's own reads, and the save on
+// this device that follows the grid (S8), are reported separately.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 import { resolve } from 'node:path';
@@ -40,6 +40,7 @@ const results: {
   summaryMs: number;
   longestBlockMs: number;
   peakMemoryBytes: number;
+  saveMs: number;
 }[] = [];
 const mismatches: string[] = [];
 let cancelFailure: string | undefined;
@@ -75,6 +76,15 @@ try {
     const output = page.locator('output[data-status=done]');
     const result = JSON.parse((await output.getAttribute('data-result')) ?? '{}');
     const wallMs = Number(await output.getAttribute('data-wall-ms'));
+    // The save runs in the worker after the grid shows (S8); memory is sampled until it ends.
+    const saveStarted = Date.now();
+    const saved = page.getByText('Saved on this device.', { exact: true });
+    const notSaved = page.getByText('This analysis was not saved on this device');
+    await saved.or(notSaved).waitFor({ timeout: 180_000 });
+    const saveMs = Date.now() - saveStarted;
+    if ((await notSaved.count()) > 0) {
+      mismatches.push(`run ${run}: not saved: ${await notSaved.locator('..').innerText()}`);
+    }
     const longestBlockMs = Math.max(
       before,
       await page.evaluate(() => (window as unknown as { longestTaskMs: number }).longestTaskMs),
@@ -105,9 +115,9 @@ try {
         `run ${run}: total ${result.monetaryTotal}, expected ${expected.cleaned.totalCents / 100}`,
       );
     }
-    results.push({ wallMs, previewMs, summaryMs, longestBlockMs, peakMemoryBytes });
+    results.push({ wallMs, previewMs, summaryMs, longestBlockMs, peakMemoryBytes, saveMs });
     console.log(
-      `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms`,
+      `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, saved in ${(saveMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms`,
     );
   }
   // Cancel needs a run long enough to click during; small files finish first.
@@ -141,6 +151,14 @@ const summary = {
       50,
     ),
   ),
+  // From the grid showing to "Saved on this device." (S8); no TRD target, reported only.
+  saveP50Ms: Math.round(
+    percentile(
+      results.map((r) => r.saveMs).sort((a, b) => a - b),
+      50,
+    ),
+  ),
+  saveMaxMs: Math.round(Math.max(...results.map((r) => r.saveMs))),
   longestMainThreadBlockMs: Math.round(Math.max(...results.map((r) => r.longestBlockMs))),
   // Resident memory of all Chromium processes, sampled every 250 ms during each run.
   peakBrowserMemoryMB: Math.round(Math.max(...results.map((r) => r.peakMemoryBytes)) / 2 ** 20),

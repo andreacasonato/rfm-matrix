@@ -1,9 +1,29 @@
-import { describe, expect, it } from 'vitest';
-import { previewCsv, UnreadableFileError } from './preview';
+import { describe, expect, it, vi } from 'vitest';
+import { maxFileBytes, previewCsv, UnreadableFileError } from './preview';
 
 const lines = (n: number) => Array.from({ length: n }, (_, i) => `c${i},${i}`).join('\n');
 
 describe('previewCsv', () => {
+  it('refuses a file over the size limit before reading any of it', async () => {
+    const file = new Blob(['id,n\n1,2\n']);
+    const slice = vi.spyOn(file, 'slice');
+    const stream = vi.spyOn(file, 'stream');
+    await expect(previewCsv(file, { maxBytes: file.size - 1 })).rejects.toMatchObject({
+      kind: 'too-large',
+    });
+    expect(slice).not.toHaveBeenCalled();
+    expect(stream).not.toHaveBeenCalled();
+  });
+
+  it('reads a file exactly at the size limit', async () => {
+    const file = new Blob(['id,n\n1,2\n']);
+    await expect(previewCsv(file, { maxBytes: file.size })).resolves.toMatchObject({ rowCount: 1 });
+  });
+
+  it('limits files to 320 MB, just above the 1M-row benchmark file (ADR-0017)', () => {
+    expect(maxFileBytes).toBe(320_000_000);
+  });
+
   it('returns the first 20 rows and counts every row', async () => {
     const preview = await previewCsv(new Blob([`id,n\n${lines(50)}\n`]));
     expect(preview.header).toEqual(['id', 'n']);

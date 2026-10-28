@@ -2,6 +2,7 @@
 // reporting orders by status and day so the screen can count exclusions before the analysis.
 import type { AnalysisPlan, CsvFormat, WorkerMessage } from './protocol';
 import { readOrders } from './read-orders';
+import { errorMessage } from './worker-error';
 
 export async function runSummary(
   source: Blob | string,
@@ -24,6 +25,6 @@ export async function runSummary(
       },
     });
   } catch (error) {
-    post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
+    post(errorMessage(error));
   }
 }

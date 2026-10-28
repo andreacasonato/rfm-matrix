@@ -20,6 +20,12 @@ consequences, governance, notes.
 | [0012](0012-column-mapping-rules.md) | Column mapping: amounts, dates, customer keys, presets | Accepted |
 | [0013](0013-cleaning-and-refunds.md) | Cleaning rules, refunds, net amounts, analysis window | Accepted |
 | [0014](0014-export-and-segment-texts.md) | Safe CSV export and the default segment texts | Accepted |
+| [0015](0015-content-security-policy.md) | Content-Security-Policy as a meta tag, with Trusted Types | Accepted |
+| [0016](0016-security-scans.md) | Dependency and static-analysis scans in CI | Accepted |
+| [0017](0017-file-size-limit.md) | A 320 MB file size limit, and out-of-memory errors | Accepted |
+| [0018](0018-storage-and-accessibility-test-tools.md) | Test tools for storage and accessibility | Accepted |
+| [0019](0019-snapshot-records.md) | How a snapshot is saved: file fingerprint, extra fields, one transaction | Accepted |
+| [0020](0020-offline-service-worker.md) | Offline after first load, with a hand-written service worker | Accepted |
 
 ## Template
 

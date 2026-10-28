@@ -21,7 +21,7 @@ type Props = {
 };
 
 const select =
-  'h-10 rounded-control border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control border border-control-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
 
 /** Lets the user correct a wrong guess about how the file is written (TRD §11). */
 export function FormatControls({ delimiter, encoding, onChange }: Props) {

@@ -1,4 +1,4 @@
-import type { CustomerScore, Score } from '@rfm-matrix/core';
+import { type CustomerScore, defaultSegmentMap, type Score, setCell } from '@rfm-matrix/core';
 import { describe, expect, it } from 'vitest';
 import { buildCustomerTable } from './customer-table';
 import { handleSessionRequest } from './session';
@@ -16,6 +16,23 @@ const scores: CustomerScore[] = ['champions', 'champions', 'lost'].map((segmentI
 const table = buildCustomerTable(scores, false);
 
 describe('handleSessionRequest (worker side of segment detail)', () => {
+  it('applies a new map and answers with the new segment summary (S7)', async () => {
+    const own = buildCustomerTable(scores, false);
+    const map = setCell(defaultSegmentMap, { r: 5, f: 1, m: 'all' }, 'lost');
+    const reply = await handleSessionRequest(own, { type: 'apply-map', requestId: 3, map });
+    if (reply.type !== 'map-applied') throw new Error(`expected map-applied, got ${reply.type}`);
+    expect(reply.requestId).toBe(3);
+    expect(reply.segments.segments.find((s) => s.id === 'lost')?.customers).toBe(3);
+  });
+
+  it('refuses an invalid map and keeps the old segments', async () => {
+    const own = buildCustomerTable(scores, false);
+    const map = { ...defaultSegmentMap, cells: defaultSegmentMap.cells.slice(1) };
+    const reply = await handleSessionRequest(own, { type: 'apply-map', requestId: 4, map });
+    expect(reply).toMatchObject({ type: 'error', requestId: 4 });
+    expect(own.segmentIds).toEqual(['champions', 'lost']);
+  });
+
   it('answers a page request with the request id', async () => {
     const reply = await handleSessionRequest(table, {
       type: 'segment-page',

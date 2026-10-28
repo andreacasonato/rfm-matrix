@@ -1,6 +1,7 @@
 // The worker's preview job, kept free of worker globals so it can be tested in Node.
-import { previewCsv, UnreadableFileError } from '@rfm-matrix/io';
+import { previewCsv } from '@rfm-matrix/io';
 import type { CsvFormat, WorkerMessage } from './protocol';
+import { errorMessage } from './worker-error';
 
 const progressEveryMs = 250;
 
@@ -26,10 +27,6 @@ export async function runPreview(
     });
     post({ type: 'preview-done', preview });
   } catch (error) {
-    if (error instanceof UnreadableFileError) {
-      post({ type: 'error', message: error.message, unreadable: error.kind });
-    } else {
-      post({ type: 'error', message: error instanceof Error ? error.message : String(error) });
-    }
+    post(errorMessage(error));
   }
 }

@@ -1,5 +1,6 @@
 import { readFile } from 'node:fs/promises';
 import { expect, type Page, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 async function exportSegment(page: Page, name: string) {
   const download = page.waitForEvent('download');
@@ -63,7 +64,7 @@ test.describe('segment detail and export (S6)', () => {
       mimeType: 'text/csv',
       buffer: Buffer.from(hostile),
     });
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await page.getByRole('button', { name: 'Confirm columns' }).click();
     await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.locator('output[data-status=done]')).toBeAttached();

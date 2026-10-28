@@ -2,7 +2,7 @@
 // Export, named after the segment ("Export Champions").
 import type { Segment, SegmentSummary } from '@rfm-matrix/core';
 import { useEffect, useState } from 'react';
-import type { AnalysisSession } from '../analysis/worker-client';
+import type { AnalysisSession } from '../analysis/analysis-client';
 import { Button } from '../components/Button';
 import { downloadFile } from '../components/download';
 import { Notice } from '../components/Notice';

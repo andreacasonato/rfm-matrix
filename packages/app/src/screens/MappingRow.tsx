@@ -21,7 +21,7 @@ type Props = {
 };
 
 const select =
-  'h-10 w-full rounded-control text-body border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
+  'h-10 w-full rounded-control text-body border border-control-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas aria-[invalid=true]:border-negative';
 
 export function MappingRow({ field, label, need, header, value, samples, read, onChange }: Props) {
   const id = `map-${field}`;

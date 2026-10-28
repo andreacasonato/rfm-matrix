@@ -2,7 +2,7 @@
 import { defaultSegmentMap, type Segment, type SegmentSummary } from '@rfm-matrix/core';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import type { AnalysisSession } from '../analysis/worker-client';
+import type { AnalysisSession } from '../analysis/analysis-client';
 import type { CustomerRow, SegmentPage } from './customer-table';
 import { SegmentScreen } from './SegmentScreen';
 
@@ -39,7 +39,7 @@ function fakeSession(total: number) {
     }),
   );
   const exportSegment = vi.fn(async () => ({ file: new Blob(['csv']), rows: total }));
-  return { segmentPage, exportSegment } satisfies AnalysisSession;
+  return { segmentPage, exportSegment, applyMap: vi.fn(), save: vi.fn() } satisfies AnalysisSession;
 }
 
 const summary = (customers: number): SegmentSummary => ({

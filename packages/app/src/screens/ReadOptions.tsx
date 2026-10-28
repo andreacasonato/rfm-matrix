@@ -18,7 +18,7 @@ type Props = {
 };
 
 const select =
-  'h-10 rounded-control text-body border border-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
+  'h-10 rounded-control text-body border border-control-border bg-surface px-3 text-text-primary enabled:hover:bg-canvas';
 const choice = 'flex items-start gap-2';
 const radio = 'mt-1 accent-action-primary';
 

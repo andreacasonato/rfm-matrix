@@ -16,6 +16,9 @@ export type CustomerTable = {
   m: Uint8Array;
   segmentIds: string[];
   segment: Uint8Array;
+  /** Epoch ms of each customer's first and last order, kept for saving (SCHEMA.md). */
+  firstOrderAt: Float64Array;
+  lastOrderAt: Float64Array;
 };
 
 export type SortKey = 'customer' | 'email' | 'recencyDays' | 'orders' | 'spend' | 'r' | 'f' | 'm';
@@ -32,7 +35,14 @@ export type CustomerRow = {
 };
 export type SegmentPage = { total: number; rows: CustomerRow[] };
 
-export function buildCustomerTable(scores: CustomerScore[], withEmail: boolean): CustomerTable {
+type OrderTimes = { firstOrderAt: Date | number; lastOrderAt: Date | number };
+
+/** `orderTimes`, when given, lines up with `scores`, as the aggregates scores came from do. */
+export function buildCustomerTable(
+  scores: CustomerScore[],
+  withEmail: boolean,
+  orderTimes?: OrderTimes[],
+): CustomerTable {
   const n = scores.length;
   const segmentIds: string[] = [];
   const table: CustomerTable = {
@@ -46,6 +56,8 @@ export function buildCustomerTable(scores: CustomerScore[], withEmail: boolean):
     m: new Uint8Array(n),
     segmentIds,
     segment: new Uint8Array(n),
+    firstOrderAt: new Float64Array(n),
+    lastOrderAt: new Float64Array(n),
   };
   scores.forEach((c, i) => {
     table.keys[i] = c.customerKey;
@@ -56,6 +68,8 @@ export function buildCustomerTable(scores: CustomerScore[], withEmail: boolean):
     table.r[i] = c.r;
     table.f[i] = c.f;
     table.m[i] = c.m;
+    table.firstOrderAt[i] = Number(orderTimes?.[i]?.firstOrderAt ?? 0);
+    table.lastOrderAt[i] = Number(orderTimes?.[i]?.lastOrderAt ?? 0);
     let id = segmentIds.indexOf(c.segmentId);
     if (id < 0) id = segmentIds.push(c.segmentId) - 1;
     table.segment[i] = id;

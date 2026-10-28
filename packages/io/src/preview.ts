@@ -19,9 +19,14 @@ export type PreviewOptions = {
   previewRows?: number;
   chunkSize?: number;
   onProgress?: (rowsRead: number, bytesRead: number) => void;
+  /** Larger files are refused before any byte is read; defaults to `maxFileBytes`. */
+  maxBytes?: number;
 };
 
-export type UnreadableKind = 'xlsx' | 'xls' | 'binary' | 'empty';
+/** Just above the 304 MB file the 1M-row benchmark proved within memory (ADR-0017). */
+export const maxFileBytes = 320_000_000;
+
+export type UnreadableKind = 'xlsx' | 'xls' | 'binary' | 'empty' | 'too-large';
 
 export class UnreadableFileError extends Error {
   constructor(readonly kind: UnreadableKind) {
@@ -31,6 +36,7 @@ export class UnreadableFileError extends Error {
 }
 
 export async function previewCsv(file: Blob, options: PreviewOptions = {}): Promise<CsvPreview> {
+  if (file.size > (options.maxBytes ?? maxFileBytes)) throw new UnreadableFileError('too-large');
   const sniff = await sniffFile(file);
   if (sniff.kind !== 'text') throw new UnreadableFileError(sniff.kind);
   const encoding = options.encoding ?? sniff.encoding;

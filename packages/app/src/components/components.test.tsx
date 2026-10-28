@@ -4,6 +4,7 @@ import { afterEach, describe, expect, it, vi } from 'vitest';
 import { Button } from './Button';
 import { DropZone } from './DropZone';
 import { Notice } from './Notice';
+import { ProgressBar } from './ProgressBar';
 
 afterEach(cleanup);
 
@@ -92,5 +93,26 @@ describe('Notice', () => {
   it('announces warnings politely', () => {
     render(<Notice tone="warning" title="3 rows could not be read" />);
     expect(screen.getByRole('status').textContent).toContain('3 rows could not be read');
+  });
+});
+
+describe('ProgressBar', () => {
+  it('reports the share done as a whole percentage', () => {
+    render(<ProgressBar label="Reading" done={1} total={3} />);
+    const bar = screen.getByRole('progressbar', { name: 'Reading' });
+    expect(bar.getAttribute('aria-valuenow')).toBe('33');
+    expect(bar.getAttribute('aria-valuemax')).toBe('100');
+  });
+
+  it('has no value while the total is unknown', () => {
+    render(<ProgressBar label="Opening" done={0} />);
+    expect(screen.getByRole('progressbar', { name: 'Opening' }).hasAttribute('aria-valuenow')).toBe(
+      false,
+    );
+  });
+
+  it('never goes past 100 percent', () => {
+    render(<ProgressBar label="Reading" done={9} total={4} />);
+    expect(screen.getByRole('progressbar').getAttribute('aria-valuenow')).toBe('100');
   });
 });

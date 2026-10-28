@@ -1,13 +1,16 @@
-// Runs one job in a fresh worker from the page. Cancel stops the worker immediately.
-import type { UnreadableKind } from '@rfm-matrix/io';
-import type { SegmentPage, Sort } from '../segment/customer-table';
+import type { SegmentMap } from '@rfm-matrix/core';
 import type {
   AnalysisPlan,
   CsvFormat,
-  DoneMessage,
+  MovementDoneMessage,
+  MoversExportedMessage,
   PreviewDoneMessage,
   PreviewProgressMessage,
   ProgressMessage,
+  ProjectExportedMessage,
+  ProjectImportedMessage,
+  ReadFailure,
+  SaveRequest,
   SessionReply,
   SessionRequest,
   SummaryDoneMessage,
@@ -22,29 +25,24 @@ export type JobHandle<T> = { result: Promise<T>; cancel(): void };
 export class WorkerJobError extends Error {
   constructor(
     message: string,
-    readonly unreadable?: UnreadableKind,
+    readonly unreadable?: ReadFailure,
+    readonly tooFewCustomers?: number,
   ) {
     super(message);
     this.name = 'WorkerJobError';
   }
 }
 
-/** Questions about a finished analysis, answered by the worker that ran it (S6). */
-export type AnalysisSession = {
-  segmentPage(segmentId: string, sort: Sort, page: number, pageSize: number): Promise<SegmentPage>;
-  exportSegment(segmentId: string, segmentName: string): Promise<{ file: Blob; rows: number }>;
-};
-
 type Pending = { resolve(reply: SessionReply): void; reject(error: Error): void };
 
-function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
+export function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
   request: WorkerRequest,
   doneType: Done['type'],
   progressType: Progress['type'],
   onProgress: (progress: Progress) => void,
   { keepAlive = false } = {},
 ): JobHandle<Done> & {
-  ask(request: DistributiveOmit<SessionRequest, 'requestId'>): Promise<SessionReply>;
+  ask(request: DistributiveOmit<SessionRequest | SaveRequest, 'requestId'>): Promise<SessionReply>;
 } {
   const worker = new Worker(new URL('./analysis.worker.ts', import.meta.url), { type: 'module' });
   let cancel = () => {};
@@ -76,7 +74,7 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
       if (message.type === progressType) onProgress(message as Progress);
       else if (message.type === doneType) finish(undefined, message as Done);
       else if (message.type === 'error') {
-        finish(new WorkerJobError(message.message, message.unreadable));
+        finish(new WorkerJobError(message.message, message.unreadable, message.tooFewCustomers));
       }
     };
     worker.onerror = (event) => {
@@ -86,12 +84,12 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
   });
 
   worker.postMessage(request);
-  const ask = (question: DistributiveOmit<SessionRequest, 'requestId'>) =>
+  const ask = (question: DistributiveOmit<SessionRequest | SaveRequest, 'requestId'>) =>
     new Promise<SessionReply>((resolve, reject) => {
       if (stopped) return reject(new DOMException('Cancelled', 'AbortError'));
       const requestId = nextRequest++;
       pending.set(requestId, { resolve, reject });
-      worker.postMessage({ ...question, requestId } as SessionRequest);
+      worker.postMessage({ ...question, requestId } as SessionRequest | SaveRequest);
     });
   // Before the result: cancels the job. After it (analysis sessions): closes the worker.
   return {
@@ -103,38 +101,7 @@ function startJob<Done extends WorkerMessage, Progress extends WorkerMessage>(
   };
 }
 
-type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
-
-export type AnalysisHandle = JobHandle<DoneMessage> & { session: AnalysisSession };
-
-/** Runs an analysis; the worker stays open for segment questions until cancel() closes it. */
-export function startAnalysis(
-  file: Blob,
-  plan: AnalysisPlan,
-  format: CsvFormat,
-  onProgress: (progress: ProgressMessage) => void,
-): AnalysisHandle {
-  const job = startJob<DoneMessage, ProgressMessage>(
-    { type: 'start', file, plan, format },
-    'done',
-    'progress',
-    onProgress,
-    { keepAlive: true },
-  );
-  const session: AnalysisSession = {
-    async segmentPage(segmentId, sort, page, pageSize) {
-      const reply = await job.ask({ type: 'segment-page', segmentId, sort, page, pageSize });
-      if (reply.type !== 'segment-page-done') throw new WorkerJobError('Unexpected reply');
-      return reply.page;
-    },
-    async exportSegment(segmentId, segmentName) {
-      const reply = await job.ask({ type: 'export', segmentId, segmentName });
-      if (reply.type !== 'export-done') throw new WorkerJobError('Unexpected reply');
-      return { file: reply.file, rows: reply.rows };
-    },
-  };
-  return { result: job.result, cancel: job.cancel, session };
-}
+export type DistributiveOmit<T, K extends keyof T> = T extends unknown ? Omit<T, K> : never;
 
 export const startPreview = (
   file: Blob,
@@ -159,4 +126,46 @@ export const startSummary = (
     'summary-done',
     'summary-progress',
     onProgress,
+  );
+
+/** Save project file (S9): the project as a compressed file, built in a worker. */
+export const startProjectExport = (projectId: string): JobHandle<ProjectExportedMessage> =>
+  startJob<ProjectExportedMessage, ProgressMessage>(
+    { type: 'export-project', projectId },
+    'project-exported',
+    'progress',
+    () => {},
+  );
+
+/** Open project file (S9): checked and added as a new project, in a worker. */
+export const startProjectImport = (file: Blob): JobHandle<ProjectImportedMessage> =>
+  startJob<ProjectImportedMessage, ProgressMessage>(
+    { type: 'import-project', file },
+    'project-imported',
+    'progress',
+    () => {},
+  );
+
+/** Movement between two saved analyses (S10), compared in a worker. */
+export const startMovement = (earlierId: string, laterId: string, map: SegmentMap) =>
+  startJob<MovementDoneMessage, ProgressMessage>(
+    { type: 'movement', earlierId, laterId, map },
+    'movement-done',
+    'progress',
+    () => {},
+  );
+
+/** One flow's customers as a CSV (S10, "Export movers"). */
+export const startMoversExport = (
+  earlierId: string,
+  laterId: string,
+  map: SegmentMap,
+  from: string,
+  to: string,
+) =>
+  startJob<MoversExportedMessage, ProgressMessage>(
+    { type: 'export-movers', earlierId, laterId, map, from, to },
+    'movers-exported',
+    'progress',
+    () => {},
   );

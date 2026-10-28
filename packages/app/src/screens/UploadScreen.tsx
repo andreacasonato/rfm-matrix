@@ -6,9 +6,10 @@ import { type JobHandle, startPreview, WorkerJobError } from '../analysis/worker
 import { Button } from '../components/Button';
 import { DropZone } from '../components/DropZone';
 import { Notice } from '../components/Notice';
+import { recordError } from '../diagnostics/diagnostics';
 import { FormatControls } from './FormatControls';
 import { PreviewTable } from './PreviewTable';
-import { unreadableMessages } from './unreadable';
+import { describeReadFailure } from './unreadable';
 
 type Props = {
   onBack(): void;
@@ -24,9 +25,10 @@ type State =
 
 const count = (n: number) => n.toLocaleString('en-US');
 
-function describeError(error: unknown) {
+function describeError(error: unknown, rowsRead: number) {
+  recordError(error instanceof Error ? error.message : String(error));
   if (error instanceof WorkerJobError && error.unreadable)
-    return unreadableMessages[error.unreadable];
+    return describeReadFailure(error.unreadable, rowsRead);
   const message = error instanceof Error ? error.message : String(error);
   return { title: 'This file could not be read', detail: message };
 }
@@ -38,7 +40,9 @@ export function UploadScreen({ onBack, onContinue, previewFile = startPreview }:
   function read(file: File, format: CsvFormat = {}) {
     job.current?.cancel();
     setState({ status: 'reading', file, rowsRead: 0 });
+    let rowsReached = 0;
     const current = previewFile(file, format, ({ rowsRead }) => {
+      rowsReached = rowsRead;
       if (job.current === current) setState({ status: 'reading', file, rowsRead });
     });
     job.current = current;
@@ -49,7 +53,7 @@ export function UploadScreen({ onBack, onContinue, previewFile = startPreview }:
       (error: unknown) => {
         if (job.current !== current) return;
         if (error instanceof DOMException && error.name === 'AbortError') return;
-        setState({ status: 'error', file, ...describeError(error) });
+        setState({ status: 'error', file, ...describeError(error, rowsReached) });
       },
     );
   }

@@ -54,6 +54,8 @@ export {
 } from './cleaning';
 export type { GridCell } from './grid';
 export { gridCells } from './grid';
+export type { Flow, Movement, SnapshotScores } from './movement';
+export { compareSnapshots, notInEarlier, notInLater } from './movement';
 export type { ReadSettings } from './order-row';
 export { toOrderRow } from './order-row';
 export type { AmountLevel, CustomerAggregate, OrderBookResult } from './orders';
@@ -69,6 +71,20 @@ export {
   validateMapping,
 } from './presets';
 export type {
+  CustomerColumns,
+  FileMapping,
+  ProjectFile,
+  ProjectFileLimits,
+  ProjectFileResult,
+  ProjectFileSnapshot,
+} from './project-file';
+export {
+  projectFileLimits,
+  projectFileToJson,
+  projectFileVersion,
+  readProjectFile,
+} from './project-file';
+export type {
   BinSizes,
   Dimension,
   DimensionMethod,
@@ -77,9 +93,18 @@ export type {
   ScoringMethods,
 } from './score';
 export { defaultScoring, NotEnoughCustomersError, score, validateBreaks } from './score';
+export type { CellTarget } from './segment-edits';
+export { copyLayer, describeCell, rfSegment, sameForEveryM, setCell } from './segment-edits';
+export type { MapFileResult } from './segment-map-file';
+export {
+  maxMapFileLength,
+  refuseLargeMapFile,
+  segmentMapFromFile,
+  segmentMapToFile,
+} from './segment-map-file';
 export type { Segment, SegmentMap, ValidationResult } from './segments';
 export { applySegments, cellIndex, defaultSegmentMap, segmentFor, validateMap } from './segments';
-export type { SegmentSummary, SegmentsSummary } from './summary';
-export { summariseSegments } from './summary';
+export type { SegmentSummary, SegmentsSummary, SegmentTotals } from './summary';
+export { summariseSegments, summariseTotals } from './summary';
 export type { DateOrder, DecimalSeparator, DetectedDateOrder } from './values';
 export { detectDateOrder, detectDecimal, parseAmount, parseDate } from './values';

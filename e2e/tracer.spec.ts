@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // packages/app/public/sample-orders.csv: 2,000 synthetic rows, seed 42; 540 customers remain
 // once the default cleaning leaves fully refunded orders out (ADR-0013).
@@ -43,7 +44,7 @@ test.describe('tracer bullet (M2)', () => {
       mimeType: 'text/csv',
       buffer: Buffer.from(csv),
     });
-    await page.getByRole('button', { name: 'Continue' }).click();
+    await continueToColumns(page);
     await page.getByRole('button', { name: 'Confirm columns' }).click();
     await page.getByRole('button', { name: 'Run analysis' }).click();
     await expect(page.getByRole('alert')).toContainText('at least 5 customers');

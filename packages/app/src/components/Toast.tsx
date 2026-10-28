@@ -13,10 +13,11 @@ export function Toast({ message, onClose }: { message: string; onClose(): void }
   }, [onClose]);
 
   return (
-    <div className="fixed inset-x-4 bottom-4 z-10 flex justify-center">
+    // The wrapper spans the width but lets clicks through; only the bar itself takes them.
+    <div className="pointer-events-none fixed inset-x-4 bottom-4 z-10 flex justify-center">
       <div
         role="status"
-        className="flex items-center gap-3 rounded-control border border-text-secondary bg-tooltip px-4 py-3 text-on-tooltip"
+        className="pointer-events-auto flex items-center gap-3 rounded-control border border-text-secondary bg-tooltip px-4 py-3 text-on-tooltip"
       >
         <span>{message}</span>
         <button

@@ -1,4 +1,5 @@
 import type { ReactNode } from 'react';
+import { DiagnosticsPanel } from '../diagnostics/DiagnosticsPanel';
 
 type Tone = 'error' | 'warning' | 'info';
 
@@ -10,7 +11,8 @@ const tones: Record<Tone, { box: string; title: string }> = {
 
 type Props = { tone: Tone; title: string; children?: ReactNode; actions?: ReactNode };
 
-/** A status message with a coloured bar; errors are announced at once, others politely. */
+/** A status message with a coloured bar; errors are announced at once, others politely, and
+ * every error offers the diagnostics panel. */
 export function Notice({ tone, title, children, actions }: Props) {
   const style = tones[tone];
   return (
@@ -21,6 +23,7 @@ export function Notice({ tone, title, children, actions }: Props) {
       <p className={`font-semibold ${style.title}`}>{title}</p>
       {children && <div className="text-text-primary">{children}</div>}
       {actions && <div className="flex flex-wrap gap-2">{actions}</div>}
+      {tone === 'error' && <DiagnosticsPanel error={title} />}
     </div>
   );
 }

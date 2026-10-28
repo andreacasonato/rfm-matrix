@@ -1,4 +1,5 @@
 import { expect, test } from '@playwright/test';
+import { continueToColumns } from './steps.ts';
 
 // The hand-counted fixture from packages/core/src/fixtures/cleaning-orders.ts as a CSV file.
 const csv = [
@@ -29,7 +30,7 @@ test('cleaning counts match the hand-counted fixture (S3 proof)', async ({ page 
     mimeType: 'text/csv',
     buffer: Buffer.from(csv),
   });
-  await page.getByRole('button', { name: 'Continue' }).click();
+  await continueToColumns(page);
   await page.getByRole('button', { name: 'Confirm columns' }).click();
 
   await expect(page.getByLabel(/cancelled · 1 order/)).not.toBeChecked();

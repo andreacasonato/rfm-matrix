@@ -12,7 +12,7 @@ Seven milestones and 11 vertical slices, starting with the riskiest part: scorin
 | M1 | Hardest part proven | A synthetic 1,000,000-row CSV streams through a Web Worker and is reduced to per-customer totals within the TRD target on the reference laptop; result recorded in ADR-0003; prototype deployed to GitHub Pages |
 | M2 | Tracer bullet | Sample CSV → worker → quantile scores → plain list of segment counts on screen, through every package |
 | M3 | Core workflow | Slices S1–S6: upload to exported segment works end to end |
-| M4 | Privacy and safety | CSP in place; formula escaping on export; file validation; Delete all data; dependency and static-analysis scans in CI |
+| M4 | Privacy and safety | CSP in place; formula escaping on export; file validation; dependency and static-analysis scans in CI. Delete all data moved to S8 (2026-10-26): nothing is stored on the device before S8 |
 | M5 | Hardening | Slices S7–S11; every state from APP_FLOW.md; WCAG AA contrast; 100k-row benchmark in CI; diagnostics panel; README and "How scores work"; first usability round |
 | M6 | Staged release | v0.x shared with 5–10 early-tester merchants; feedback triaged; then v1.0 public; rollback = redeploy previous tag |
 
@@ -27,7 +27,7 @@ Seven milestones and 11 vertical slices, starting with the riskiest part: scorin
 | S5 Default map and grid | 5 | SCHEMA.md default map; grid with counts and revenue shares | Grid totals equal cleaned totals |
 | S6 Segment detail and export | 7 | Customer list; safe CSV export | Formula-escaping test; CSV opens in a spreadsheet |
 | S7 Segment rules editor | 6 | Edit, validate, undo, reset | 125-cell coverage test; undo test |
-| S8 Local persistence | 9 | IndexedDB; migration 001 | Reload keeps data; migration fixture test |
+| S8 Local persistence | 9 | IndexedDB; migration 001; Delete all data | Reload keeps data; migration fixture test; Delete all data leaves no database behind |
 | S9 Project files | 9 | Save and open project files | Round-trip test; old-version test |
 | S10 Movement | 8 | From-to table between snapshots | Counts match a hand-built fixture |
 | S11 Onboarding and sample data | — | Three questions; one-click sample | Golden path under 5 minutes in a usability test |
