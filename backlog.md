@@ -9,3 +9,4 @@ Ideas go here instead of being built. Moving one into scope needs the maintainer
 - Multiple currencies
 - Languages other than English
 - Export presets formatted for specific email tools
+- An "Update ready, reload" notice, so a new version takes over without closing every tab (ADR-0020)
