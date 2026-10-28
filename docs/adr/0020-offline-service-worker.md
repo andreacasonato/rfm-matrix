@@ -1,6 +1,6 @@
 # ADR-0020: Offline after first load, with a hand-written service worker
 
-- Status: Proposed
+- Status: Accepted (approved by the maintainer on 2026-10-28)
 - Date: 2026-10-28
 
 ## Context
