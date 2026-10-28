@@ -7,8 +7,10 @@ import type { AnalysisPlan, CsvFormat, DoneMessage, ProgressMessage } from '../a
 import { WorkerJobError } from '../analysis/worker-client';
 import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
+import { ProgressBar } from '../components/ProgressBar';
 import { recordError, recordRun } from '../diagnostics/diagnostics';
 import { AnalysisView, type ProjectContext } from './AnalysisView';
+import { plural } from './plural';
 import { describeReadFailure } from './unreadable';
 
 type Props = {
@@ -30,7 +32,7 @@ export type AnalysisInput =
   | { snapshotId: string; map: SegmentMap; hasEmail: boolean };
 
 type State =
-  | { status: 'running'; progress?: ProgressMessage }
+  | { status: 'running'; progress?: ProgressMessage; fileBytes?: number }
   | { status: 'done'; result: DoneMessage; wallMs: number; hasEmail: boolean }
   | { status: 'cancelled' }
   | { status: 'error'; title: string; message: string };
@@ -44,6 +46,13 @@ function failure(error: Error, rowsRead: number): State {
   if (error instanceof WorkerJobError && error.unreadable) {
     const { title, detail } = describeReadFailure(error.unreadable, rowsRead);
     return { status: 'error', title, message: detail };
+  }
+  if (error instanceof WorkerJobError && error.tooFewCustomers !== undefined) {
+    return {
+      status: 'error',
+      title: 'Too few customers to score',
+      message: `This file has ${plural(error.tooFewCustomers, 'customer')} left after cleaning. Scores rank customers against each other, so they need at least 5. Check the status filters and lookback on Clean and settings, or export a longer date range.`,
+    };
   }
   return { status: 'error', title: 'Something went wrong', message: error.message };
 }
@@ -67,9 +76,10 @@ export function ResultsScreen({
       (input) => {
         if (stopped) return;
         let rowsRead = 0;
+        const fileBytes = 'source' in input ? input.source.size : undefined;
         const onProgress = (progress: ProgressMessage) => {
           rowsRead = progress.rowsRead;
-          setState({ status: 'running', progress });
+          setState({ status: 'running', progress, ...(fileBytes ? { fileBytes } : {}) });
         };
         const current =
           'snapshotId' in input
@@ -130,6 +140,11 @@ export function ResultsScreen({
           aria-busy="true"
           className="flex flex-wrap items-center justify-between gap-4 rounded-panel border border-border bg-surface p-6"
         >
+          <ProgressBar
+            label="Running analysis"
+            done={state.progress?.bytesRead ?? 0}
+            {...(state.fileBytes ? { total: state.fileBytes } : {})}
+          />
           <p>
             Running analysis…{' '}
             <span className="tabular-nums">{count(state.progress?.rowsRead ?? 0)}</span> rows,{' '}

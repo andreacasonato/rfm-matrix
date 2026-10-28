@@ -1,3 +1,4 @@
+import { NotEnoughCustomersError } from '@rfm-matrix/core';
 import { UnreadableFileError } from '@rfm-matrix/io';
 import { describe, expect, it } from 'vitest';
 import { errorMessage } from './worker-error';
@@ -7,6 +8,14 @@ describe('errorMessage', () => {
     expect(errorMessage(new UnreadableFileError('too-large'))).toMatchObject({
       type: 'error',
       unreadable: 'too-large',
+    });
+  });
+
+  // APP_FLOW's grid warning: TRD §11 blocks scoring under 5 customers, so the page says why.
+  it('passes on how many customers there were when too few to score', () => {
+    expect(errorMessage(new NotEnoughCustomersError(3))).toMatchObject({
+      type: 'error',
+      tooFewCustomers: 3,
     });
   });
 

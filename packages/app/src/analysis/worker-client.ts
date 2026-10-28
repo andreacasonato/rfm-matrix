@@ -26,6 +26,7 @@ export class WorkerJobError extends Error {
   constructor(
     message: string,
     readonly unreadable?: ReadFailure,
+    readonly tooFewCustomers?: number,
   ) {
     super(message);
     this.name = 'WorkerJobError';
@@ -73,7 +74,7 @@ export function startJob<Done extends WorkerMessage, Progress extends WorkerMess
       if (message.type === progressType) onProgress(message as Progress);
       else if (message.type === doneType) finish(undefined, message as Done);
       else if (message.type === 'error') {
-        finish(new WorkerJobError(message.message, message.unreadable));
+        finish(new WorkerJobError(message.message, message.unreadable, message.tooFewCustomers));
       }
     };
     worker.onerror = (event) => {

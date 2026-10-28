@@ -79,4 +79,26 @@ describe('ResultsScreen', () => {
     expect(alert).toContain('after 120,000 rows');
     expect(alert).not.toContain('Something went wrong');
   });
+
+  it('explains that scoring needs at least 5 customers (TRD §11)', async () => {
+    const fake = fakeAnalysis();
+    render(<ResultsScreen {...props} analyse={fake.analyse} />);
+    await act(async () => {});
+    await act(async () => fake.fail(new WorkerJobError('Scores need…', undefined, 3)));
+    const alert = screen.getByRole('alert').textContent;
+    expect(alert).toContain('Too few customers to score');
+    expect(alert).toContain('This file has 3 customers');
+    expect(alert).not.toContain('Something went wrong');
+  });
+
+  it('shows how much of the file has been read (APP_FLOW Processing)', async () => {
+    const fake = fakeAnalysis();
+    const load = () =>
+      props.load().then((input) => ({ ...input, source: new Blob(['x'.repeat(200)]) }));
+    render(<ResultsScreen {...props} load={load} analyse={fake.analyse} />);
+    await act(async () => {});
+    act(() => fake.progress({ type: 'progress', rowsRead: 10, bytesRead: 50, customers: 4 }));
+    const bar = screen.getByRole('progressbar', { name: 'Running analysis' });
+    expect(bar.getAttribute('aria-valuenow')).toBe('25');
+  });
 });

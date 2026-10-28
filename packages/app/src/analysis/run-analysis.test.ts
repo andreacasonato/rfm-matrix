@@ -92,6 +92,7 @@ describe('runAnalysis', () => {
     expect((await run(few)).at(-1)).toEqual({
       type: 'error',
       message: 'Scores need at least 5 customers; this data has 1.',
+      tooFewCustomers: 1,
     });
   });
 });

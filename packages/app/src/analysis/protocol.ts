@@ -173,6 +173,8 @@ export type ErrorMessage = {
   type: 'error';
   message: string;
   unreadable?: ReadFailure;
+  /** How many customers there were when too few to score (TRD §11). */
+  tooFewCustomers?: number;
   /** Set when the error answers a session request. */
   requestId?: number;
 };
