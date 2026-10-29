@@ -1,6 +1,7 @@
 // @vitest-environment jsdom
 import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { bugReportUrl } from '../components/ExternalLink';
 import { Notice } from '../components/Notice';
 import { DiagnosticsPanel } from './DiagnosticsPanel';
 import { diagnosticsText, recordError, recordRun, resetDiagnostics, scrub } from './diagnostics';
@@ -54,6 +55,14 @@ describe('the diagnostics panel', () => {
     );
     expect(writeText).toHaveBeenCalledWith(expect.stringContaining('RFM Matrix'));
     expect(screen.getByRole('status').textContent).toContain('Copied');
+  });
+
+  it('links to the bug report form next to Copy diagnostics', () => {
+    render(<Notice tone="error" title="Something went wrong" />);
+    fireEvent.click(screen.getByText('Diagnostics'));
+    expect(
+      screen.getByRole('link', { name: 'Report a bug (opens in a new tab)' }).getAttribute('href'),
+    ).toBe(bugReportUrl);
   });
 
   it('is not part of warnings or information', () => {

@@ -2,6 +2,7 @@ import { mkdirSync, mkdtempSync, rmSync, writeFileSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { afterEach, describe, expect, it } from 'vitest';
+import { allowedUrls } from './allowed-urls.ts';
 import { disallowedUrls, externalUrls, scanDirectory } from './hosts.ts';
 
 const allow = [{ prefix: 'http://www.w3.org/2000/svg', reason: 'SVG namespace' }];
@@ -55,6 +56,21 @@ describe('allowlist matching', () => {
   it('treats an entry ending in a slash as everything below that path', () => {
     const text = '"https://react.dev/errors/418" "https://react.dev/other"';
     expect(disallowedUrls(text, list)).toEqual(['https://react.dev/other']);
+  });
+});
+
+describe('the app allowlist', () => {
+  it('allows links to the project issues, and nothing else on GitHub', () => {
+    const text = [
+      '"https://github.com/andreacasonato/rfm-matrix/issues/new/choose"',
+      '"https://github.com/andreacasonato/rfm-matrix/issues/new?template=bug_report.md"',
+      '"https://github.com/andreacasonato/rfm-matrix/raw/main/x.js"',
+      '"https://github.com/other/"',
+    ].join(' ');
+    expect(disallowedUrls(text, allowedUrls)).toEqual([
+      'https://github.com/andreacasonato/rfm-matrix/raw/main/x.js',
+      'https://github.com/other/',
+    ]);
   });
 });
 

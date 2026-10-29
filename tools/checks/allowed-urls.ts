@@ -26,6 +26,10 @@ export const allowedUrls: AllowedUrl[] = [
     reason: 'License URL inside the Geist font license text, OFL.txt (ADR-0005)',
   },
   {
+    prefix: 'https://github.com/andreacasonato/rfm-matrix/issues/',
+    reason: 'Feedback and Report a bug links (PRD §12); opened by the user, never fetched',
+  },
+  {
     prefix: 'https://react.dev/errors/',
     reason: 'Text in minified React error messages; shown, never requested',
   },

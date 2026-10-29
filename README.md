@@ -60,8 +60,10 @@ first.
 ## Found a bug?
 
 Every error message has a **Diagnostics** panel. Copy its report (it contains no customer
-data) into a [GitHub issue](https://github.com/andreacasonato/rfm-matrix/issues) with the steps
-that led to it.
+data), then press **Report a bug** beside it, which opens a new
+[GitHub issue](https://github.com/andreacasonato/rfm-matrix/issues), and paste it there with the
+steps that led to it. For anything else, use **Feedback** at the top of every screen. Never paste your order file
+or customer details: issues are public.
 
 ## For developers
 
