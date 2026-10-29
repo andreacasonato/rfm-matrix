@@ -2,13 +2,15 @@
 // Loads the synthetic file into the built app in Chromium and checks the TRD §3 targets.
 // Drives the real screens. Timed from Run analysis to segment counts ready (parse, aggregate,
 // clean, score, segment); the preview's and the cleaning summary's own reads, and the save on
-// this device that follows the grid (S8), are reported separately.
+// this device that follows the grid (S8), are reported separately. The main-thread limit, too,
+// applies to that window only (TRD §3); the whole session's longest task is reported.
 import { readFileSync, writeFileSync } from 'node:fs';
 import { cpus, totalmem } from 'node:os';
 import { resolve } from 'node:path';
 import { parseArgs } from 'node:util';
 import { chromium } from '@playwright/test';
 import { checkCancel } from './cancel-check.ts';
+import { type LongTask, longestTaskIn } from './long-tasks.ts';
 import { sampleMemory } from './memory.ts';
 import { previewFile, runAnalysis, summariseFile } from './navigate.ts';
 import { serve } from './serve.ts';
@@ -22,6 +24,8 @@ const { values } = parseArgs({
 const rows = Number(values.rows);
 const runs = Number(values.runs);
 const targets = rows >= 1_000_000 ? { p50: 30_000, p95: 60_000 } : { p50: 3_000, p95: 6_000 };
+// During scoring only. A cold first upload in headless Chromium once showed an idle 144 ms frame
+// on a CI runner, outside the window; it is still reported as longestSessionBlockMs.
 const maxBlockMs = 100;
 // Regression guard: about 860 MB for 1M rows before S6's string-retention bug; it reached 1.5 GB.
 const maxMemoryMB = rows >= 1_000_000 ? 1200 : undefined;
@@ -39,6 +43,7 @@ const results: {
   previewMs: number;
   summaryMs: number;
   longestBlockMs: number;
+  sessionBlockMs: number;
   peakMemoryBytes: number;
   saveMs: number;
 }[] = [];
@@ -50,25 +55,25 @@ try {
     const context = await browser.newContext();
     const page = await context.newPage();
     await page.addInitScript(() => {
-      const w = window as unknown as { longestTaskMs: number };
-      w.longestTaskMs = 0;
+      const w = window as unknown as { longTasks: LongTask[] };
+      w.longTasks = [];
       new PerformanceObserver((list) => {
-        for (const entry of list.getEntries()) {
-          w.longestTaskMs = Math.max(w.longestTaskMs, entry.duration);
+        for (const { startTime, duration } of list.getEntries()) {
+          w.longTasks.push({ startTime, duration });
         }
       }).observe({ type: 'longtask', buffered: true });
     });
+    const now = () => page.evaluate(() => performance.now());
     await page.goto(url);
     await page.waitForLoadState('networkidle');
-    const before = await page.evaluate(
-      () => (window as unknown as { longestTaskMs: number }).longestTaskMs,
-    );
     const stopSampling = sampleMemory(process.pid);
     const previewMs = await previewFile(page, csvPath);
     const summaryMs = await summariseFile(page);
+    const scoringStart = await now();
     await runAnalysis(page);
     const outcome = page.locator('output[data-status=done], [role=alert]');
     await outcome.waitFor({ timeout: 180_000 });
+    const scoringEnd = await now();
     const alert = await page.locator('[role=alert]').count();
     if (alert > 0)
       throw new Error(`Run ${run} failed: ${await page.locator('[role=alert]').innerText()}`);
@@ -85,10 +90,12 @@ try {
     if ((await notSaved.count()) > 0) {
       mismatches.push(`run ${run}: not saved: ${await notSaved.locator('..').innerText()}`);
     }
-    const longestBlockMs = Math.max(
-      before,
-      await page.evaluate(() => (window as unknown as { longestTaskMs: number }).longestTaskMs),
+    // Read after the save, so a task that ended just before the counts were ready is reported.
+    const tasks = await page.evaluate(
+      () => (window as unknown as { longTasks: LongTask[] }).longTasks,
     );
+    const longestBlockMs = longestTaskIn(tasks, { start: scoringStart, end: scoringEnd });
+    const sessionBlockMs = Math.max(0, ...tasks.map((t) => t.duration));
     const peakMemoryBytes = stopSampling();
     await context.close();
 
@@ -115,9 +122,17 @@ try {
         `run ${run}: total ${result.monetaryTotal}, expected ${expected.cleaned.totalCents / 100}`,
       );
     }
-    results.push({ wallMs, previewMs, summaryMs, longestBlockMs, peakMemoryBytes, saveMs });
+    results.push({
+      wallMs,
+      previewMs,
+      summaryMs,
+      longestBlockMs,
+      sessionBlockMs,
+      peakMemoryBytes,
+      saveMs,
+    });
     console.log(
-      `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, saved in ${(saveMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms`,
+      `run ${run}/${runs}: ${(wallMs / 1000).toFixed(2)} s, saved in ${(saveMs / 1000).toFixed(2)} s, longest block ${longestBlockMs.toFixed(0)} ms while scoring, ${sessionBlockMs.toFixed(0)} ms in the session`,
     );
   }
   // Cancel needs a run long enough to click during; small files finish first.
@@ -160,6 +175,8 @@ const summary = {
   ),
   saveMaxMs: Math.round(Math.max(...results.map((r) => r.saveMs))),
   longestMainThreadBlockMs: Math.round(Math.max(...results.map((r) => r.longestBlockMs))),
+  // Page load, upload and save included; no TRD target, reported only.
+  longestSessionBlockMs: Math.round(Math.max(...results.map((r) => r.sessionBlockMs))),
   // Resident memory of all Chromium processes, sampled every 250 ms during each run.
   peakBrowserMemoryMB: Math.round(Math.max(...results.map((r) => r.peakMemoryBytes)) / 2 ** 20),
   cancelChecked: rows >= 100_000,
@@ -172,7 +189,7 @@ const failures = [
   summary.p50Ms > targets.p50 && `p50 ${summary.p50Ms} ms is over ${targets.p50} ms`,
   summary.p95Ms > targets.p95 && `p95 ${summary.p95Ms} ms is over ${targets.p95} ms`,
   summary.longestMainThreadBlockMs > maxBlockMs &&
-    `main thread blocked ${summary.longestMainThreadBlockMs} ms (limit ${maxBlockMs} ms)`,
+    `main thread blocked ${summary.longestMainThreadBlockMs} ms while scoring (limit ${maxBlockMs} ms)`,
   mismatches.length > 0 && `${mismatches.length} result mismatches`,
   maxMemoryMB !== undefined &&
     summary.peakBrowserMemoryMB > maxMemoryMB &&

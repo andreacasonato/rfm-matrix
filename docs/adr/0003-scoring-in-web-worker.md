@@ -61,3 +61,13 @@ counts ready (parse, aggregate, score with ADR-0010 percentiles, apply the defau
 summarise). 20 runs: p50 4.4 s, p95 5.5 s; no main-thread task over 50 ms; peak memory of all
 browser processes 796 MB; segment counts added up to the customer count in every run. Scoring
 adds no measurable time next to parsing.
+
+M6 update, 2026-10-29: the CI benchmark failed with "main thread blocked 144 ms" although
+nothing had changed in scoring, and the app before that push (abae1b9) measured the same.
+Every long task came at the moment the file is picked, before Run analysis: one rendering frame
+of 55–175 ms that ran almost no script, style or layout, so headless Chromium was waiting rather
+than working. It appears mostly on the first upload in a fresh browser and is longer on slower
+machines. The benchmark had counted the whole session, which is stricter than TRD §3 ("UI frame
+during scoring"). With the maintainer's approval it now fails only on tasks between Run analysis
+and segment counts ready, and still reports the whole session's longest task
+(`longestSessionBlockMs`). If a merchant reports the upload freezing, start there.
