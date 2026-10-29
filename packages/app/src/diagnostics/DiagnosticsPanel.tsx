@@ -2,6 +2,7 @@
 // copy into a GitHub issue, with no customer data (TRD §12).
 import { useState } from 'react';
 import { Button } from '../components/Button';
+import { bugReportUrl, ExternalLink } from '../components/ExternalLink';
 import { diagnosticsText } from './diagnostics';
 
 export function DiagnosticsPanel({ error }: { error?: string }) {
@@ -32,6 +33,7 @@ export function DiagnosticsPanel({ error }: { error?: string }) {
         </pre>
         <div className="flex flex-wrap items-center gap-3">
           <Button onClick={() => void copy()}>Copy diagnostics</Button>
+          <ExternalLink href={bugReportUrl}>Report a bug</ExternalLink>
           {copied !== 'idle' && (
             <span role="status">
               {copied === 'copied'
