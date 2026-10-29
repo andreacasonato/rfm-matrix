@@ -45,7 +45,8 @@ Planned as 0.1.0, the first release for early testers.
 
 - A progress bar while a large file is read, and a plain message when a file has too few
   customers to score.
-- Every error has a **Diagnostics** panel with a report you can copy into a bug report. It
-  holds no customer data.
+- Every error has a **Diagnostics** panel with a report you can copy, and **Report a bug**
+  beside it. The report holds no customer data.
+- **Feedback** at the top of every screen opens the project's issues on GitHub.
 - Every screen meets WCAG AA contrast and passes automated accessibility checks.
 - A 100,000-row file is scored on every change to the code, so the app stays fast.
