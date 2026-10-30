@@ -3,6 +3,8 @@
 What changed in each release, written for the people who use the app. Versions follow
 [docs/RELEASE.md](docs/RELEASE.md).
 
+## Unreleased
+
 ## 0.1.0 (2026-10-30)
 
 The first release, for early testers.

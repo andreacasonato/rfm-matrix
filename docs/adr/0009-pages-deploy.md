@@ -57,8 +57,13 @@ hostile branch or tag name cannot run code in the workflow.
 **Limit.** The check lives in the workflow file, so a collaborator with push access could edit
 the file on a branch and start it from there. GitHub can enforce the rule outside the file:
 Settings → Environments → `github-pages` → Deployment branches and tags → "Selected branches and
-tags" → add the tag rule `v*`. Recommended for the maintainer; it is a repository setting, not
-something this repository's code can change.
+tags" → add the tag rule `v*`. It is a repository setting, not something this repository's
+code can change.
+
+**In place since 2026-10-30.** The first tag deploy (v0.1.0) was refused because the
+environment allowed only `main`, GitHub's default. The maintainer added the tag rule `v*` and
+removed `main`, so GitHub now refuses any deploy that is not from a tag, whatever the workflow
+file says.
 
 ## Notes
 

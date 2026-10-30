@@ -4,6 +4,16 @@ How a version reaches the live app at https://andreacasonato.github.io/rfm-matri
 maintainer releases (AGENTS.md: agents never push, tag or publish). Production deploys only from
 a tagged release on `main` (TRD §13).
 
+## One-time setup
+
+Repository **Settings**:
+
+- **Pages** → Source: **GitHub Actions**.
+- **Environments** → `github-pages` → Deployment branches and tags → **Selected branches and
+  tags**, with one rule: Ref type **Tag**, pattern `v*`, and no branch rules. Without it GitHub
+  refuses the tag deploy with "not allowed to deploy to github-pages due to environment
+  protection rules" ([ADR-0009](adr/0009-pages-deploy.md)).
+
 ## Versions
 
 Semantic versions (TRD §13), the same number in all three packages:
