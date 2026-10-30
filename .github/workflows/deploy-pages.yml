@@ -1,9 +1,11 @@
-# Deploys the built app to GitHub Pages. Runs only when started by hand, and only from a
-# release tag on main (ADR-0009, TRD §13); choose the tag under "Use workflow from".
+# Deploys the built app to GitHub Pages, only from a release tag on main (ADR-0009, TRD §13).
+# Pushing a vX.Y.Z tag starts it; starting it by hand from an older tag is the rollback.
 # Every check that guards a merge runs again first, so a red build is never published.
 name: Deploy to GitHub Pages
 
 on:
+  push:
+    tags: ['v*.*.*']
   workflow_dispatch:
 
 permissions:
