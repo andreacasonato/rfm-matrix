@@ -57,7 +57,8 @@ releases as pre-releases.
 ### 4. Deploy
 
 GitHub → Actions → **Deploy to GitHub Pages** → **Run workflow**, and under "Use workflow from"
-choose the **tag**, not a branch. The workflow reruns every check before it publishes.
+choose the **tag**, not a branch. The first step refuses anything but a `vX.Y.Z` tag on `main`
+([ADR-0009](adr/0009-pages-deploy.md)), and the workflow reruns every check before it publishes.
 
 ### 5. Check the live app
 

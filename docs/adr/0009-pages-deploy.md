@@ -1,6 +1,7 @@
 # ADR-0009: Manually triggered GitHub Pages deploy
 
-- Status: Accepted (deploy workflow approved by the maintainer on 2026-10-23 for M1)
+- Status: Accepted (deploy workflow approved by the maintainer on 2026-10-23 for M1; deploys
+  limited to release tags on `main`, approved for M6 R3)
 - Date: 2026-10-23
 
 ## Context
@@ -29,13 +30,35 @@ Checked on github.com on 2026-10-23, newest release on or before 2026-10-09, pin
 - Nothing is published without a person pressing "Run workflow".
 - Until M4 there is no Content-Security-Policy, so the prototype relies on the build check
   alone for its no-network promise.
-- Before v1, the trigger should be limited to release tags on `main` (TRD §13); that change
-  needs the maintainer's approval as a hosting change.
+- Since M6, a deploy runs only from a release tag on `main` (TRD §13); see Amendment below.
 
 ## Governance
 
 - Only the deploy job gets `pages: write` and `id-token: write`; the build job reads only.
 - Changing the trigger or the published folder is a hosting change and needs approval.
+
+## Amendment (M6 R3, 2026-10-30): deploy only from release tags on `main`
+
+The workflow still starts only by hand. Its first step after checkout,
+`node tools/checks/check-release-ref.ts`, fails the run unless:
+
+- it was started from a tag, not a branch (`GITHUB_REF_TYPE` is `tag`);
+- the tag is a release version, `v` and three numbers such as `v0.1.0`, with no suffix;
+- the tag's commit is on `main` (`git merge-base --is-ancestor HEAD origin/main`, after a
+  checkout with full history).
+
+The rules live in `tools/checks/release-ref.ts`, with unit tests. Rollback is unchanged: start
+the workflow from the previous tag, which passes the same check. Deploying automatically when a
+tag is pushed was left out, so a person still decides when the live app changes.
+
+The ref names reach the script as environment variables, never pasted into a shell command, so a
+hostile branch or tag name cannot run code in the workflow.
+
+**Limit.** The check lives in the workflow file, so a collaborator with push access could edit
+the file on a branch and start it from there. GitHub can enforce the rule outside the file:
+Settings → Environments → `github-pages` → Deployment branches and tags → "Selected branches and
+tags" → add the tag rule `v*`. Recommended for the maintainer; it is a repository setting, not
+something this repository's code can change.
 
 ## Notes
 
