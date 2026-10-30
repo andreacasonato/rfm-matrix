@@ -53,7 +53,10 @@ Copy this list into the release pull request and tick it off.
       changed.
 - [ ] Merge it once CI is green.
 
-### 3. Tag
+### 3. Tag and deploy
+
+Tag only after the pull request is merged: pushing the tag deploys it at once, and a tag on a
+commit that is not on `main` fails the deploy.
 
 ```sh
 git switch main && git pull
@@ -61,14 +64,14 @@ git tag -a v0.1.0 -m "v0.1.0"
 git push origin v0.1.0
 ```
 
+Pushing the tag starts **Deploy to GitHub Pages** (GitHub → Actions). Its first step refuses
+anything but a `vX.Y.Z` tag on `main` ([ADR-0009](adr/0009-pages-deploy.md)), and it reruns
+every check before it publishes. Wait for it to go green.
+
+### 4. Publish the GitHub release
+
 On GitHub, create a release from the tag and paste the changelog entry into it. Mark `0.x`
 releases as pre-releases.
-
-### 4. Deploy
-
-GitHub → Actions → **Deploy to GitHub Pages** → **Run workflow**, and under "Use workflow from"
-choose the **tag**, not a branch. The first step refuses anything but a `vX.Y.Z` tag on `main`
-([ADR-0009](adr/0009-pages-deploy.md)), and the workflow reruns every check before it publishes.
 
 ### 5. Check the live app
 
@@ -88,8 +91,9 @@ If any check fails, roll back (below), then open an issue.
 ## Rollback
 
 Rollback means deploying the previous tag again (TRD §13): Actions → **Deploy to GitHub Pages**
-→ **Run workflow** → choose the previous tag. Then delete the bad GitHub release, but keep its
-tag, so the history stays honest.
+→ **Run workflow** → under "Use workflow from", choose the previous tag. Then delete the bad
+GitHub release, but keep its tag, so the history stays honest. Never move a tag and push it
+again: pushing a tag deploys it. The fix goes out as a new version.
 
 Two things to know:
 

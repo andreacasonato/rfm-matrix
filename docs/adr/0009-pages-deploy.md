@@ -48,8 +48,7 @@ The workflow still starts only by hand. Its first step after checkout,
   checkout with full history).
 
 The rules live in `tools/checks/release-ref.ts`, with unit tests. Rollback is unchanged: start
-the workflow from the previous tag, which passes the same check. Deploying automatically when a
-tag is pushed was left out, so a person still decides when the live app changes.
+the workflow from the previous tag, which passes the same check.
 
 The ref names reach the script as environment variables, never pasted into a shell command, so a
 hostile branch or tag name cannot run code in the workflow.
@@ -64,6 +63,15 @@ code can change.
 environment allowed only `main`, GitHub's default. The maintainer added the tag rule `v*` and
 removed `main`, so GitHub now refuses any deploy that is not from a tag, whatever the workflow
 file says.
+
+## Amendment (2026-10-30): deploy when a release tag is pushed
+
+Approved by the maintainer after v0.1.0. Pushing a tag matching `v*.*.*` now starts the
+workflow, so a release no longer needs a click in Actions; starting it by hand stays, for
+rollback. A person still decides when the live app changes, because only the maintainer pushes
+tags. Everything else holds: the release-ref check (a stricter `vX.Y.Z` than the trigger's
+pattern, on `main`), the `v*` tag rule on the environment, and every check before publishing.
+Pushes to branches, `main` included, never deploy (TRD §13).
 
 ## Notes
 
