@@ -1,6 +1,10 @@
 // The segment list beside the grid: family pill, count, share of customers, revenue bar.
+// Customers, Share and Revenue sort when clicked; Segment returns to the map's order.
 import type { SegmentsSummary } from '@rfm-matrix/core';
+import { useState } from 'react';
 import { familyOf } from './families';
+import { SortHeader } from './SortHeader';
+import { nextSort, type SegmentSort, sortSegments } from './segment-sort';
 
 const count = (n: number) => n.toLocaleString('en-US');
 const percent = (share: number) => `${(share * 100).toFixed(1)}%`;
@@ -12,31 +16,33 @@ export function SegmentPanel({ summary, onOpen }: Props) {
   // Bars are drawn relative to the largest share so small segments stay visible; the exact
   // share is printed beside each bar.
   const largest = Math.max(0, ...summary.segments.map((s) => s.revenueShare));
+  const [sort, setSort] = useState<SegmentSort>({ key: 'segment' });
+  const header = { sort, onSort: (column: SegmentSort['key']) => setSort(nextSort(sort, column)) };
   return (
     <div className="overflow-x-auto rounded-panel border border-border bg-surface p-4">
       <table className="w-full border-collapse text-left">
         <caption className="pb-2 text-left text-section font-semibold">Segments</caption>
         <thead>
           <tr className="border-b border-border text-small text-text-secondary">
-            <th scope="col" className="px-2 py-2 font-normal">
+            <SortHeader column="segment" {...header}>
               Segment
-            </th>
+            </SortHeader>
             <th scope="col" className="hidden px-2 py-2 font-normal sm:table-cell">
               <span className="sr-only">Family</span>
             </th>
-            <th scope="col" className="px-2 py-2 text-right font-normal">
+            <SortHeader column="customers" align="right" {...header}>
               Customers
-            </th>
-            <th scope="col" className="px-2 py-2 text-right font-normal">
+            </SortHeader>
+            <SortHeader column="share" align="right" {...header}>
               Share
-            </th>
-            <th scope="col" className="px-2 py-2 font-normal">
+            </SortHeader>
+            <SortHeader column="revenue" {...header}>
               Revenue
-            </th>
+            </SortHeader>
           </tr>
         </thead>
         <tbody>
-          {summary.segments.map((segment) => {
+          {sortSegments(summary.segments, sort).map((segment) => {
             const family = familyOf(segment.id);
             const bar = largest > 0 ? (Math.max(0, segment.revenueShare) / largest) * 100 : 0;
             return (
