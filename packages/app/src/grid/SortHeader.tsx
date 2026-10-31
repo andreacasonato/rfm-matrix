@@ -28,7 +28,7 @@ export function SortHeader({
     <th
       scope="col"
       aria-sort={direction}
-      className={`px-1 py-2 font-normal sm:px-2 ${align === 'right' ? 'text-right' : ''} ${className}`}
+      className={`px-0.5 py-2 font-normal sm:px-2 ${align === 'right' ? 'text-right' : ''} ${className}`}
     >
       <button
         type="button"
