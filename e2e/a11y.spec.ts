@@ -36,6 +36,9 @@ for (const colorScheme of ['light', 'dark'] as const) {
     test('the upload journey, screen by screen', async ({ page }) => {
       await page.goto('/');
       await expectAccessible(page, 'Start');
+      await page.getByRole('button', { name: 'Guide' }).click();
+      await expectAccessible(page, 'Guide');
+      await page.getByRole('button', { name: 'Back' }).click();
       await page.getByRole('button', { name: 'Upload orders' }).click();
       await expectAccessible(page, 'Upload');
       await page

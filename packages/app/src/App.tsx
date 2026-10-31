@@ -5,6 +5,7 @@ import type { AnalysisPlan, CsvFormat } from './analysis/protocol';
 import { Page } from './components/Page';
 import { ProjectDataScreen } from './data/ProjectDataScreen';
 import { recordStorage } from './diagnostics/diagnostics';
+import { GuideScreen } from './guide/GuideScreen';
 import { type Onboarding, OnboardingScreen } from './onboarding/OnboardingScreen';
 import { loadSample } from './sample';
 import type { ProjectContext } from './screens/AnalysisView';
@@ -49,6 +50,7 @@ const keep = ({ into, answers }: Carry) => ({
 
 export function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' });
+  const [guide, setGuide] = useState(false);
   const [storage, setStorage] = useState<StorageState>('checking');
   useEffect(() => {
     void probeStorage().then((state) => {
@@ -82,113 +84,117 @@ export function App() {
   const start = () => setScreen({ name: 'start' });
 
   return (
-    <Page wide={screen.name === 'results'}>
-      {screen.name === 'start' && (
-        <StartScreen
-          storage={storage}
-          onUpload={() => setScreen({ name: 'upload' })}
-          onTrySample={() =>
-            setScreen({ name: 'results', label: 'Sample store', load: loadSample })
-          }
-          projects={projects}
-          onOpenProject={(id) => void openProject(id)}
-          onProjectData={() => setScreen({ name: 'data' })}
-          onProjectOpened={(id) => void openProject(id)}
-          {...(screen.notice ? { notice: screen.notice } : {})}
-        />
-      )}
-      {screen.name === 'data' && (
-        <ProjectDataScreen
-          onBack={start}
-          onDeleted={() =>
-            setScreen({ name: 'start', notice: 'All data on this device was deleted.' })
-          }
-        />
-      )}
-      {screen.name === 'upload' && (
-        <UploadScreen
-          onBack={start}
-          onContinue={(file, preview) => {
-            const next = { file, preview, ...keep(screen) };
-            setScreen(
-              !screen.into && ask ? { name: 'questions', ...next } : { name: 'map', ...next },
-            );
-          }}
-        />
-      )}
-      {screen.name === 'questions' && (
-        <OnboardingScreen
-          fileName={screen.file.name}
-          preview={screen.preview}
-          onDone={(answers) => {
-            questionsDone();
-            setScreen({ ...screen, name: 'map', answers });
-          }}
-          onSkip={() => {
-            questionsDone();
-            setScreen({ ...screen, name: 'map' });
-          }}
-        />
-      )}
-      {screen.name === 'map' && (
-        <MapScreen
-          fileName={screen.file.name}
-          preview={screen.preview}
-          onBack={() => setScreen({ name: 'upload', ...keep(screen) })}
-          {...(screen.into ? { previous: screen.into.mapping } : {})}
-          {...(screen.answers ? { answers: screen.answers } : {})}
-          onConfirm={(plan) =>
-            setScreen({
-              ...screen,
-              name: 'clean',
-              plan,
-              // Kept in state so the cleaning screen's summary job is not restarted on re-render.
-              format: { encoding: screen.preview.encoding, delimiter: screen.preview.delimiter },
-            })
-          }
-        />
-      )}
-      {screen.name === 'clean' && (
-        <CleanScreen
-          fileName={screen.file.name}
-          file={screen.file}
-          plan={screen.plan}
-          format={screen.format}
-          onBack={() =>
-            setScreen({
-              name: 'map',
-              file: screen.file,
-              preview: screen.preview,
-              ...keep(screen),
-            })
-          }
-          {...(screen.into ? { previous: screen.into } : {})}
-          {...(screen.answers ? { startDate: screen.answers } : {})}
-          onRun={(chosen) => {
-            const { file, format, into } = screen;
-            const project = projectForUpload(file.name, into);
-            const plan = { ...chosen, segmentMap: project.map };
-            setScreen({
-              name: 'results',
-              label: file.name,
-              load: () => Promise.resolve({ source: file, plan, format }),
-              // Saved when this browser lets the app keep data (S8).
-              ...(storage === 'available' ? { project } : {}),
-            });
-          }}
-        />
-      )}
-      {screen.name === 'results' && (
-        <ResultsScreen
-          label={screen.label}
-          load={screen.load}
-          onStartOver={start}
-          {...(screen.project ? { project: screen.project } : {})}
-          {...(screen.into
-            ? { onUploadNew: () => setScreen({ name: 'upload', ...keep(screen) }) }
-            : {})}
-        />
-      )}
+    <Page wide={screen.name === 'results' && !guide} onGuide={() => setGuide(true)}>
+      {guide && <GuideScreen onBack={() => setGuide(false)} />}
+      {/* Hidden, not unmounted, while the Guide is open, so the screen and its worker survive. */}
+      <div className={guide ? 'hidden' : 'contents'}>
+        {screen.name === 'start' && (
+          <StartScreen
+            storage={storage}
+            onUpload={() => setScreen({ name: 'upload' })}
+            onTrySample={() =>
+              setScreen({ name: 'results', label: 'Sample store', load: loadSample })
+            }
+            projects={projects}
+            onOpenProject={(id) => void openProject(id)}
+            onProjectData={() => setScreen({ name: 'data' })}
+            onProjectOpened={(id) => void openProject(id)}
+            {...(screen.notice ? { notice: screen.notice } : {})}
+          />
+        )}
+        {screen.name === 'data' && (
+          <ProjectDataScreen
+            onBack={start}
+            onDeleted={() =>
+              setScreen({ name: 'start', notice: 'All data on this device was deleted.' })
+            }
+          />
+        )}
+        {screen.name === 'upload' && (
+          <UploadScreen
+            onBack={start}
+            onContinue={(file, preview) => {
+              const next = { file, preview, ...keep(screen) };
+              setScreen(
+                !screen.into && ask ? { name: 'questions', ...next } : { name: 'map', ...next },
+              );
+            }}
+          />
+        )}
+        {screen.name === 'questions' && (
+          <OnboardingScreen
+            fileName={screen.file.name}
+            preview={screen.preview}
+            onDone={(answers) => {
+              questionsDone();
+              setScreen({ ...screen, name: 'map', answers });
+            }}
+            onSkip={() => {
+              questionsDone();
+              setScreen({ ...screen, name: 'map' });
+            }}
+          />
+        )}
+        {screen.name === 'map' && (
+          <MapScreen
+            fileName={screen.file.name}
+            preview={screen.preview}
+            onBack={() => setScreen({ name: 'upload', ...keep(screen) })}
+            {...(screen.into ? { previous: screen.into.mapping } : {})}
+            {...(screen.answers ? { answers: screen.answers } : {})}
+            onConfirm={(plan) =>
+              setScreen({
+                ...screen,
+                name: 'clean',
+                plan,
+                // Kept in state so the cleaning screen's summary job is not restarted on re-render.
+                format: { encoding: screen.preview.encoding, delimiter: screen.preview.delimiter },
+              })
+            }
+          />
+        )}
+        {screen.name === 'clean' && (
+          <CleanScreen
+            fileName={screen.file.name}
+            file={screen.file}
+            plan={screen.plan}
+            format={screen.format}
+            onBack={() =>
+              setScreen({
+                name: 'map',
+                file: screen.file,
+                preview: screen.preview,
+                ...keep(screen),
+              })
+            }
+            {...(screen.into ? { previous: screen.into } : {})}
+            {...(screen.answers ? { startDate: screen.answers } : {})}
+            onRun={(chosen) => {
+              const { file, format, into } = screen;
+              const project = projectForUpload(file.name, into);
+              const plan = { ...chosen, segmentMap: project.map };
+              setScreen({
+                name: 'results',
+                label: file.name,
+                load: () => Promise.resolve({ source: file, plan, format }),
+                // Saved when this browser lets the app keep data (S8).
+                ...(storage === 'available' ? { project } : {}),
+              });
+            }}
+          />
+        )}
+        {screen.name === 'results' && (
+          <ResultsScreen
+            label={screen.label}
+            load={screen.load}
+            onStartOver={start}
+            {...(screen.project ? { project: screen.project } : {})}
+            {...(screen.into
+              ? { onUploadNew: () => setScreen({ name: 'upload', ...keep(screen) }) }
+              : {})}
+          />
+        )}
+      </div>
     </Page>
   );
 }
