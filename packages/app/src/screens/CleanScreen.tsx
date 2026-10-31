@@ -12,14 +12,10 @@ import { Button } from '../components/Button';
 import { Notice } from '../components/Notice';
 import { defaultCleaning } from '../mapping/default-cleaning';
 import { choicesFromRules, scoringChoicesFrom } from '../mapping/previous-settings';
+import { defaultScoringChoices, type ScoringChoices, scoringFrom } from '../thresholds/choices';
 import { type Choices, CleaningOptions } from './CleaningOptions';
 import { ExclusionCounts } from './ExclusionCounts';
-import {
-  defaultScoringChoices,
-  type ScoringChoices,
-  ScoringOptions,
-  scoringFrom,
-} from './ScoringOptions';
+import { ScoringOptions } from './ScoringOptions';
 
 type Props = {
   fileName: string;

@@ -47,7 +47,10 @@ async function analyse(page: Page, frequency: 'quantile' | 'fixed') {
   await page.getByRole('button', { name: 'Confirm columns' }).click();
   await page.getByLabel('Another date').check();
   await page.getByLabel('Analysis date').fill('2026-01-01');
-  await page.getByLabel('Frequency scoring').selectOption(frequency);
+  await page
+    .getByRole('radiogroup', { name: 'Frequency: who decides' })
+    .getByLabel(frequency === 'quantile' ? /Let the app decide/ : /Set my own/)
+    .check();
   await page.getByRole('button', { name: 'Run analysis' }).click();
   await expect(page.locator('output[data-status=done]')).toBeVisible();
 }

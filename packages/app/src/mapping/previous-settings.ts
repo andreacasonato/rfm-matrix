@@ -8,8 +8,8 @@ import type {
   ScoringMethods,
 } from '@rfm-matrix/core';
 import type { Choices } from '../screens/CleaningOptions';
-import { defaultScoringChoices, type ScoringChoices } from '../screens/ScoringOptions';
 import type { StoredMapping } from '../storage/schema';
+import { defaultScoringChoices, type ScoringChoices } from '../thresholds/choices';
 
 export type ColumnNames = Partial<Record<Field, string>>;
 

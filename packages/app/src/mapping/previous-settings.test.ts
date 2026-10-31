@@ -1,6 +1,6 @@
 import { defaultScoring } from '@rfm-matrix/core';
 import { describe, expect, it } from 'vitest';
-import { defaultScoringChoices, scoringFrom } from '../screens/ScoringOptions';
+import { defaultScoringChoices, scoringFrom } from '../thresholds/choices';
 import {
   choicesFromRules,
   columnNamesOf,

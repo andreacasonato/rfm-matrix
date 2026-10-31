@@ -1,7 +1,7 @@
 // @vitest-environment jsdom
 
 import { defaultScoring } from '@rfm-matrix/core';
-import { act, cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { AnalysisPlan, FileSummary, SummaryDoneMessage } from '../analysis/protocol';
 import { CleanScreen } from './CleanScreen';
@@ -126,18 +126,28 @@ describe('CleanScreen (story 3)', () => {
 
 describe('CleanScreen scoring (S4, TRD §8 rules 5–7)', () => {
   const run = () => screen.getByRole('button', { name: 'Run analysis' });
+  // Each dimension's card has its own pair of choices (U5).
+  const choose = (dimension: string, label: RegExp) =>
+    fireEvent.click(
+      within(screen.getByRole('radiogroup', { name: `${dimension}: who decides` })).getByLabelText(
+        label,
+      ),
+    );
 
   it('lets frequency switch to quintiles', async () => {
     const onRun = await renderClean();
-    fireEvent.change(screen.getByLabelText('Frequency scoring'), { target: { value: 'quantile' } });
+    choose('Frequency', /Let the app decide/);
     fireEvent.click(run());
     expect(onRun.mock.calls[0]?.[0].scoring.f).toEqual({ method: 'quantile' });
   });
 
-  it('offers fixed recency cut points pre-filled with 30, 60, 90 and 180 days', async () => {
+  it('offers own recency thresholds pre-filled with 30, 60, 90 and 180 days', async () => {
     const onRun = await renderClean();
-    fireEvent.change(screen.getByLabelText('Recency scoring'), { target: { value: 'fixed' } });
-    expect(screen.getByLabelText('Recency cut point 1')).toHaveProperty('value', '30');
+    choose('Recency', /Set my own/);
+    expect(screen.getByLabelText('Recency score 5: within how many days')).toHaveProperty(
+      'value',
+      '30',
+    );
     fireEvent.click(run());
     expect(onRun.mock.calls[0]?.[0].scoring.r).toEqual({
       method: 'fixed',
@@ -145,16 +155,23 @@ describe('CleanScreen scoring (S4, TRD §8 rules 5–7)', () => {
     });
   });
 
-  it('blocks the run until fixed monetary cut points are filled in correctly', async () => {
+  it('blocks the run until own monetary thresholds are filled in correctly', async () => {
     const onRun = await renderClean();
-    fireEvent.change(screen.getByLabelText('Monetary scoring'), { target: { value: 'fixed' } });
+    choose('Monetary', /Set my own/);
     expect(run()).toHaveProperty('disabled', true);
+    // Score 2's threshold is the lowest, score 5's the highest.
     for (const [i, value] of ['50', '200', '100', '1000'].entries()) {
-      fireEvent.change(screen.getByLabelText(`Monetary cut point ${i + 1}`), { target: { value } });
+      fireEvent.change(screen.getByLabelText(`Monetary score ${i + 2}: more than what amount`), {
+        target: { value },
+      });
     }
-    expect(screen.getByText('Each cut point must be larger than the one before.')).toBeTruthy();
+    expect(
+      screen.getByText('Each amount must be higher than the one for the score below.'),
+    ).toBeTruthy();
     expect(run()).toHaveProperty('disabled', true);
-    fireEvent.change(screen.getByLabelText('Monetary cut point 3'), { target: { value: '500' } });
+    fireEvent.change(screen.getByLabelText('Monetary score 4: more than what amount'), {
+      target: { value: '500' },
+    });
     fireEvent.click(run());
     expect(onRun.mock.calls[0]?.[0].scoring.m).toEqual({
       method: 'fixed',
