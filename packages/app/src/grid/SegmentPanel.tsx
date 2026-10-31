@@ -8,7 +8,7 @@ import { nextSort, type SegmentSort, sortSegments } from './segment-sort';
 
 const count = (n: number) => n.toLocaleString('en-US');
 const percent = (share: number) => `${(share * 100).toFixed(1)}%`;
-const number = 'px-1 py-2 text-right font-mono text-number sm:px-2';
+const number = 'px-0.5 py-2 text-right font-mono text-number sm:px-2';
 
 type Props = { summary: SegmentsSummary; onOpen?(segmentId: string): void };
 
@@ -47,7 +47,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
             const bar = largest > 0 ? (Math.max(0, segment.revenueShare) / largest) * 100 : 0;
             return (
               <tr key={segment.id} data-segment={segment.id} className="border-b border-border">
-                <th scope="row" className="px-2 py-2 font-normal">
+                <th scope="row" className="px-1 py-2 font-normal sm:px-2">
                   {onOpen ? (
                     <button
                       type="button"
@@ -72,7 +72,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
                   {count(segment.customers)}
                 </td>
                 <td className={number}>{percent(segment.customerShare)}</td>
-                <td className="px-2 py-2 sm:min-w-20">
+                <td className="px-1 py-2 sm:min-w-20 sm:px-2">
                   <div className="flex items-center gap-2">
                     {/* biome-ignore lint/a11y/useSemanticElements: a native <meter> cannot be drawn with the theme tokens in every browser */}
                     <div
@@ -94,7 +94,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
         </tbody>
         <tfoot>
           <tr className="font-semibold">
-            <th scope="row" className="px-2 py-2">
+            <th scope="row" className="px-1 py-2 sm:px-2">
               Total
             </th>
             <td className="hidden sm:table-cell" />
@@ -102,7 +102,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
               {count(summary.totals.customers)}
             </td>
             <td className={number}>100%</td>
-            <td className="px-2 py-2 font-mono text-number">100%</td>
+            <td className="px-1 py-2 font-mono text-number sm:px-2">100%</td>
           </tr>
         </tfoot>
       </table>
