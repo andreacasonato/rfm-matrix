@@ -21,7 +21,9 @@ import { errorMessage } from './worker-error';
 type Options = { now?: () => number; chunkSize?: number; format?: CsvFormat };
 
 /** What the worker keeps after an analysis: the customers, and what saving needs (S8). */
-export type Analysis = { table: CustomerTable; meta?: AnalysisMeta };
+export type Analysis = { table: CustomerTable; meta?: AnalysisMeta; saved?: SavedAs };
+/** Where the analysis is saved on this device, once it is (S8), so new thresholds update it. */
+export type SavedAs = { projectId: string; snapshotId: string };
 export type AnalysisMeta = {
   source: Blob | string;
   plan: AnalysisPlan;

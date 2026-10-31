@@ -3,6 +3,7 @@
 import { validateMap } from '@rfm-matrix/core';
 import type { SessionReply, SessionRequest } from '../analysis/protocol';
 import { type CustomerTable, segmentCsv, segmentPage, segmentRows } from './customer-table';
+import { scoreCounts } from './rescore';
 import { resegment } from './resegment';
 
 export async function handleSessionRequest(
@@ -15,6 +16,17 @@ export async function handleSessionRequest(
     const validation = validateMap(request.map);
     if (!validation.ok) return { type: 'error', requestId, message: validation.problems.join(' ') };
     return { type: 'map-applied', requestId, segments: resegment(table, request.map) };
+  }
+  if (request.type === 'score-counts') {
+    try {
+      const counted = scoreCounts(table, request.dimension, request.method);
+      return { type: 'score-counts-done', requestId, ...counted };
+    } catch (error) {
+      return { type: 'error', requestId, message: (error as Error).message };
+    }
+  }
+  if (request.type === 'apply-scoring') {
+    return { type: 'error', requestId, message: 'Thresholds are applied by the worker.' };
   }
   if (request.type === 'segment-page') {
     const page = segmentPage(

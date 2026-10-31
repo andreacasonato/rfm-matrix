@@ -51,7 +51,12 @@ export function validateBreaks(dimension: Dimension, breaks: number[]): string[]
   return problems;
 }
 
-function breaksFor(dimension: Dimension, method: DimensionMethod, values: number[]): Breakpoints {
+/** The cut points for one dimension: quintiles of the values, or validated fixed cut points. */
+export function breakpointsFor(
+  dimension: Dimension,
+  method: DimensionMethod,
+  values: number[],
+): Breakpoints {
   if (method.method === 'quantile') return quintileBreakpoints(values);
   const [problem] = validateBreaks(dimension, [...method.breaks]);
   if (problem) throw new Error(problem);
@@ -65,6 +70,12 @@ function scoreValue(value: number, breaks: Breakpoints): Score {
   let score = 1;
   for (const b of breaks) if (b < value) score++;
   return score as Score;
+}
+
+/** One customer's score on one dimension; recency is reversed so the most recent score 5. */
+export function scoreFor(dimension: Dimension, value: number, breaks: Breakpoints): Score {
+  const s = scoreValue(value, breaks);
+  return dimension === 'r' ? ((6 - s) as Score) : s;
 }
 
 function binSizes(scores: Score[]): BinSizes {
@@ -86,13 +97,13 @@ export function score(
 
   const recency = customers.map((c) => analysisDay - utcDay(c.lastOrderAt));
   const breakpoints = {
-    r: breaksFor('r', scoring.r, recency),
-    f: breaksFor(
+    r: breakpointsFor('r', scoring.r, recency),
+    f: breakpointsFor(
       'f',
       scoring.f,
       customers.map((c) => c.orderCount),
     ),
-    m: breaksFor(
+    m: breakpointsFor(
       'm',
       scoring.m,
       customers.map((c) => c.monetary),
@@ -106,9 +117,9 @@ export function score(
       recencyDays,
       frequency: c.orderCount,
       monetary: c.monetary,
-      r: (6 - scoreValue(recencyDays, breakpoints.r)) as Score,
-      f: scoreValue(c.orderCount, breakpoints.f),
-      m: scoreValue(c.monetary, breakpoints.m),
+      r: scoreFor('r', recencyDays, breakpoints.r),
+      f: scoreFor('f', c.orderCount, breakpoints.f),
+      m: scoreFor('m', c.monetary, breakpoints.m),
       ...(c.email ? { email: c.email } : {}),
     };
   });

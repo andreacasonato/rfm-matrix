@@ -1,6 +1,7 @@
 // Runs parsing, previews and scoring off the main thread (ADR-0003). After an analysis the
 // worker keeps its customer table and answers segment questions about it (S6).
 import { handleSessionRequest } from '../segment/session';
+import { handleApplyScoring } from '../storage/apply-scoring';
 import { exportMovers, runMovement } from '../storage/movement';
 import { runOpenSnapshot } from '../storage/open-snapshot';
 import { exportProject, importProject } from '../storage/project-files';
@@ -55,5 +56,6 @@ scope.onmessage = (event) => {
       (error: unknown) => post(errorMessage(error)),
     );
   } else if (request.type === 'save') void handleSave(analysis, request).then(post);
+  else if (request.type === 'apply-scoring') void handleApplyScoring(analysis, request).then(post);
   else void handleSessionRequest(analysis?.table, request).then(post);
 };

@@ -40,4 +40,10 @@ A saved snapshot must also reopen without the file, so it needs the totals the g
 
 ## Notes
 
-None.
+**2026-10-31, U5 (approved by the maintainer):** new score thresholds applied after an
+analysis update its snapshot in place: `frozenConfig.scoring`, `breakpoints` and each
+customer's R, F, M and segment are rewritten in one transaction, and the project's
+`scoringConfig` follows. It is the same file on the same analysis date with corrected settings,
+so it stays one snapshot; saving a second would clutter the project and make Movement compare a
+file with itself. The fields and indexes are unchanged, so no migration. Code:
+`storage/apply-scoring.ts`, tested in `apply-scoring.test.ts`.

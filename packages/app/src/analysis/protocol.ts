@@ -16,6 +16,7 @@ import type {
 } from '@rfm-matrix/core';
 import type { CsvPreview, TextEncodingName, UnreadableKind } from '@rfm-matrix/io';
 import type { SegmentPage, Sort } from '../segment/customer-table';
+import type { ScoringReply, ScoringRequest } from './scoring-protocol';
 
 /** How to turn the file's rows into orders (ADR-0012), confirmed on the Map columns screen. */
 export type AnalysisPlan = {
@@ -52,7 +53,8 @@ export type SessionRequest =
     }
   | { type: 'export'; requestId: number; segmentId: string; segmentName: string }
   /** Re-assigns every customer with an edited map (S7). */
-  | { type: 'apply-map'; requestId: number; map: SegmentMap };
+  | { type: 'apply-map'; requestId: number; map: SegmentMap }
+  | ScoringRequest;
 /** Where to save a finished analysis (S8): a new project, or a snapshot of an existing one. */
 export type SaveTarget = {
   projectId?: string;
@@ -183,6 +185,7 @@ export type SessionReply =
   | { type: 'segment-page-done'; requestId: number; page: SegmentPage }
   | { type: 'export-done'; requestId: number; file: Blob; rows: number }
   | { type: 'map-applied'; requestId: number; segments: SegmentsSummary }
+  | ScoringReply
   | SaveReply
   | ErrorMessage;
 

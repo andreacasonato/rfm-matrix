@@ -59,7 +59,7 @@ export async function runOpenSnapshot(
       repeatCustomers: report.repeatCustomers,
       elapsedMs: now() - started,
     });
-    return { table };
+    return { table, saved: { projectId: snapshot.projectId, snapshotId } };
   } catch (error) {
     post(errorMessage(error));
     return undefined;

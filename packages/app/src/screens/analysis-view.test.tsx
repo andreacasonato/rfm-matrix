@@ -37,7 +37,14 @@ const result = {
 
 function handle(saveResult: SaveResult) {
   const save = vi.fn(async () => saveResult);
-  const session = { segmentPage: vi.fn(), exportSegment: vi.fn(), applyMap: vi.fn(), save };
+  const session = {
+    segmentPage: vi.fn(),
+    exportSegment: vi.fn(),
+    applyMap: vi.fn(),
+    save,
+    scoreCounts: vi.fn(),
+    applyScoring: vi.fn(),
+  };
   return {
     save,
     handle: { result: Promise.resolve(result), cancel: vi.fn(), session } as AnalysisHandle,

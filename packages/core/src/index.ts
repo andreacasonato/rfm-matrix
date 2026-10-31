@@ -92,7 +92,14 @@ export type {
   ScoreResult,
   ScoringMethods,
 } from './score';
-export { defaultScoring, NotEnoughCustomersError, score, validateBreaks } from './score';
+export {
+  breakpointsFor,
+  defaultScoring,
+  NotEnoughCustomersError,
+  score,
+  scoreFor,
+  validateBreaks,
+} from './score';
 export type { CellTarget } from './segment-edits';
 export { copyLayer, describeCell, rfSegment, sameForEveryM, setCell } from './segment-edits';
 export type { MapFileResult } from './segment-map-file';

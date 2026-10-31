@@ -1,6 +1,15 @@
 // The worker that ran an analysis, or opened a saved one, kept open for questions about it:
-// segment pages and exports (S6), rules edits (S7) and saving on this device (S8).
-import type { SegmentMap, SegmentsSummary } from '@rfm-matrix/core';
+// segment pages and exports (S6), rules edits (S7), saving on this device (S8) and new score
+// thresholds (U5).
+import type {
+  BinSizes,
+  Breakpoints,
+  Dimension,
+  DimensionMethod,
+  ScoringMethods,
+  SegmentMap,
+  SegmentsSummary,
+} from '@rfm-matrix/core';
 import type { SegmentPage, Sort } from '../segment/customer-table';
 import type {
   AnalysisPlan,
@@ -10,7 +19,13 @@ import type {
   SaveResult,
   SaveTarget,
 } from './protocol';
+import type { ScoringReply } from './scoring-protocol';
 import { type JobHandle, startJob, WorkerJobError } from './worker-client';
+
+export type ScoringApplied = Omit<
+  Extract<ScoringReply, { type: 'scoring-applied' }>,
+  'type' | 'requestId'
+>;
 
 /** Questions about a finished analysis, answered by the worker that ran it (S6). */
 export type AnalysisSession = {
@@ -19,6 +34,13 @@ export type AnalysisSession = {
   applyMap(map: SegmentMap): Promise<SegmentsSummary>;
   /** Saves the analysis on this device (S8); never rejects for a full disk. */
   save(target: SaveTarget): Promise<SaveResult>;
+  /** Customers per score 1–5 under a draft threshold (U5). */
+  scoreCounts(
+    dimension: Dimension,
+    method: DimensionMethod,
+  ): Promise<{ breakpoints: Breakpoints; counts: BinSizes }>;
+  /** Scores every customer again; a saved analysis is updated in place (U5). */
+  applyScoring(scoring: ScoringMethods, map: SegmentMap): Promise<ScoringApplied>;
 };
 
 export type AnalysisHandle = JobHandle<DoneMessage> & { session: AnalysisSession };
@@ -65,6 +87,17 @@ function withSession(
       const reply = await job.ask({ type: 'save', target });
       if (reply.type !== 'saved') throw new WorkerJobError('Unexpected reply');
       return reply.result;
+    },
+    async scoreCounts(dimension, method) {
+      const reply = await job.ask({ type: 'score-counts', dimension, method });
+      if (reply.type !== 'score-counts-done') throw new WorkerJobError('Unexpected reply');
+      return { breakpoints: reply.breakpoints, counts: reply.counts };
+    },
+    async applyScoring(scoring, map) {
+      const reply = await job.ask({ type: 'apply-scoring', scoring, map });
+      if (reply.type !== 'scoring-applied') throw new WorkerJobError('Unexpected reply');
+      const { type: _, requestId: __, ...applied } = reply;
+      return applied;
     },
   };
   return { result: job.result, cancel: job.cancel, session };

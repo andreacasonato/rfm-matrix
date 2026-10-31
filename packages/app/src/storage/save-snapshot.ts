@@ -14,7 +14,11 @@ import type { CustomerScoreRecord, ProjectRecord, StoredMapping } from './schema
 /** The project file and database layout version (SCHEMA.md). */
 export const schemaVersion = 1;
 
-function customerRecord(table: CustomerTable, i: number, snapshotId: string): CustomerScoreRecord {
+export function customerRecord(
+  table: CustomerTable,
+  i: number,
+  snapshotId: string,
+): CustomerScoreRecord {
   const email = table.emails?.[i];
   return {
     snapshotId,
@@ -118,6 +122,7 @@ export async function handleSave(
       batchSize,
     );
     await tx.done;
+    analysis.saved = { projectId: project.id, snapshotId };
     return reply({ ok: true, projectId: project.id, snapshotId });
   } catch (error) {
     return reply(saveFailure(error));
