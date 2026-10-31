@@ -115,6 +115,18 @@ Always shown with the segment name, never colour alone.
 
 Each with hover, active, focus, disabled, loading, empty and error states: button (primary, secondary, quiet); tabs; segmented control; stat tile with delta pill; status pill; data table with inline bar; heatmap cell; dark tooltip; upload drop zone; column-mapping row; progress bar; dialog; toast; empty state.
 
+State rules from the contrast audit (2026-10-31):
+
+- **Disabled buttons** keep secondary text on canvas with a dashed control-border edge; they
+  never fade with opacity, which dropped their text to 1.6:1 in the dark theme.
+- **Quiet buttons** have no side padding, so their text lines up with the text around them.
+- **Revenue bars** use heat-5, which keeps 3:1 against their canvas track in both themes.
+- **Heatmap caption:** "Stronger colour means more customers"; in the dark theme the busiest
+  cells are the brightest, not the darkest.
+- **Pale heatmap cells** stay pale on purpose: every cell prints its count and segment name, so
+  colour is never the only cue (WCAG 1.4.11 asks 3:1 only for graphics needed to understand
+  the content).
+
 ## Build and lock
 
 1. Build the grid screen once without and once with the design system; iterate; update the system to match.

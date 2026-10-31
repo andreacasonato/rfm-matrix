@@ -72,7 +72,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
                   {count(segment.customers)}
                 </td>
                 <td className={number}>{percent(segment.customerShare)}</td>
-                <td className="px-2 py-2 sm:min-w-28">
+                <td className="px-2 py-2 sm:min-w-20">
                   <div className="flex items-center gap-2">
                     {/* biome-ignore lint/a11y/useSemanticElements: a native <meter> cannot be drawn with the theme tokens in every browser */}
                     <div
@@ -83,7 +83,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
                       aria-valuenow={segment.revenueShare * 100}
                       className="hidden h-2 flex-1 rounded-full bg-canvas sm:block"
                     >
-                      <div className="h-2 rounded-full bg-heat-4" style={{ width: `${bar}%` }} />
+                      <div className="h-2 rounded-full bg-heat-5" style={{ width: `${bar}%` }} />
                     </div>
                     <span className="font-mono text-number">{percent(segment.revenueShare)}</span>
                   </div>

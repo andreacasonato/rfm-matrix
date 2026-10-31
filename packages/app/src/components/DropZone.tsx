@@ -29,7 +29,7 @@ export function DropZone({ onFile, disabled = false }: Props) {
       onDrop={onDrop}
       className={`flex flex-col items-center gap-3 rounded-panel border-2 border-dashed px-6 py-10 text-center ${
         dragging ? 'border-action-primary bg-heat-1' : 'border-border bg-surface'
-      } ${disabled ? 'opacity-50' : ''}`}
+      }`}
     >
       <p className="text-section font-semibold">Drop your order export here</p>
       <p className="text-text-secondary">

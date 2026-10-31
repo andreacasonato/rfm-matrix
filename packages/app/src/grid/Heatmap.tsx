@@ -113,7 +113,7 @@ export function Heatmap({ cells, segments, onOpen }: Props) {
         </tbody>
       </table>
       <p className="mt-2 text-small text-text-secondary">
-        R5 bought most recently, F5 most often. Darker cells hold more customers.
+        R5 bought most recently, F5 most often. Stronger colour means more customers.
       </p>
     </div>
   );

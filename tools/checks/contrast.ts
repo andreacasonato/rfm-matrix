@@ -60,6 +60,9 @@ export const pairs: Pair[] = [
   ['control-border', 'canvas', control, 'edge of controls on the page'],
   ['action-primary', 'surface', control, 'keyboard focus outline in panels'],
   ['action-primary', 'canvas', control, 'keyboard focus outline on the page'],
+  ['heat-5', 'canvas', control, 'revenue bar on its track'],
+  ['text-secondary', 'canvas', text, 'disabled button text'],
+  ['control-border', 'canvas', control, 'dashed edge of a disabled button'],
 ];
 
 export type ContrastFailure = { theme: string; pair: Pair; ratio: number };
