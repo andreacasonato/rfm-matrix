@@ -123,7 +123,7 @@ export function ThresholdCard({ dimension: d, choice, onChange, quintiles, count
                   <td className="py-2 pr-2">
                     <div className="flex flex-wrap items-center gap-2">
                       {score > 1 && (
-                        <label className="flex items-center gap-2">
+                        <label className="flex items-center gap-2 whitespace-nowrap">
                           {before}
                           <input
                             className={field}

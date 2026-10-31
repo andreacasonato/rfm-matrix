@@ -29,6 +29,7 @@ const project: LoadedProject = {
       sourceFileName: 'sep.csv',
       analysisDate: '2026-09-01',
       customerCount: 900,
+      scoring: defaultScoring,
     },
     {
       id: 's2',
@@ -36,6 +37,7 @@ const project: LoadedProject = {
       sourceFileName: 'oct.csv',
       analysisDate: '2026-10-01',
       customerCount: 1200,
+      scoring: defaultScoring,
     },
   ],
 };

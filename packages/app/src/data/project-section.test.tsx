@@ -35,6 +35,7 @@ const loaded = (email: boolean): LoadedProject => ({
       sourceFileName: 'oct.csv',
       analysisDate: '2026-10-01',
       customerCount: 12,
+      scoring: defaultScoring,
     },
   ],
 });

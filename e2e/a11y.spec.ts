@@ -63,6 +63,13 @@ for (const colorScheme of ['light', 'dark'] as const) {
       await page.getByRole('button', { name: 'How scores work' }).click();
       await expectAccessible(page, 'How scores work');
       await page.getByRole('button', { name: 'Back to grid' }).click();
+      await page.getByRole('button', { name: 'Score thresholds' }).click();
+      await page
+        .getByRole('radiogroup', { name: 'Monetary: who decides' })
+        .getByLabel(/Set my own/)
+        .check();
+      await expectAccessible(page, 'Score thresholds');
+      await page.getByRole('button', { name: 'Back to grid' }).click();
       await page.getByRole('button', { name: 'Edit segment rules' }).click();
       await expectAccessible(page, 'Segment rules');
       await page.getByRole('button', { name: 'Back to grid' }).click();

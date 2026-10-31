@@ -24,7 +24,7 @@ const dimensions: { d: Dimension; name: string; what: string }[] = [
 const methodIn = (scoring: ScoringMethods, d: Dimension) =>
   scoring[d].method === 'quantile'
     ? 'Cut at the 20th, 40th, 60th and 80th percentiles of your customers (quintiles, as Excel’s PERCENTILE.INC).'
-    : 'Cut at fixed values, set on Clean and settings.';
+    : 'Cut at your own thresholds, set on Score thresholds or Clean and settings.';
 
 export function HowScoresWork({
   scoring,

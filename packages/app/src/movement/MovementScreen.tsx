@@ -1,6 +1,12 @@
 // "Movement" (APP_FLOW): who moved since last time? Two saved analyses compared under the
 // project's current rules (S10), biggest flows first, each exportable for an email tool.
-import { type Movement, notInEarlier, notInLater, type SegmentMap } from '@rfm-matrix/core';
+import {
+  type Movement,
+  notInEarlier,
+  notInLater,
+  type ScoringMethods,
+  type SegmentMap,
+} from '@rfm-matrix/core';
 import { useEffect, useState } from 'react';
 import { startMovement, startMoversExport } from '../analysis/worker-client';
 import { Button } from '../components/Button';
@@ -52,6 +58,10 @@ type Result =
   | { status: 'done'; movement: Movement }
   | { status: 'error'; message: string };
 
+// Quintiles count as the same thresholds: they follow each month's customers by design (U5).
+const sameScoring = (a?: ScoringMethods, b?: ScoringMethods) =>
+  JSON.stringify(a) === JSON.stringify(b);
+
 export function MovementScreen(props: Props) {
   const { snapshots, map, onBack, onExported } = props;
   const { compare = compareInWorker, exportFlow = exportInWorker, download = downloadFile } = props;
@@ -59,6 +69,7 @@ export function MovementScreen(props: Props) {
   const [later, setLater] = useState(snapshots.at(-1)?.id ?? '');
   const [result, setResult] = useState<Result>({ status: 'loading' });
   const order = (id: string) => snapshots.findIndex((s) => s.id === id);
+  const byId = (id: string) => snapshots.find((s) => s.id === id);
   const valid = snapshots.length >= 2 && order(earlier) < order(later);
   const name = (id: string) => outside[id] ?? map.segments.find((s) => s.id === id)?.name ?? id;
 
@@ -133,6 +144,11 @@ export function MovementScreen(props: Props) {
       </section>
       {!valid && (
         <Notice tone="error" title="Choose a later analysis that comes after the earlier one" />
+      )}
+      {valid && !sameScoring(byId(earlier)?.scoring, byId(later)?.scoring) && (
+        <Notice tone="warning" title="These analyses used different score thresholds">
+          <p>So some moves come from the change, not from customers.</p>
+        </Notice>
       )}
       {valid && result.status === 'loading' && (
         <p aria-busy="true" className="text-text-secondary">

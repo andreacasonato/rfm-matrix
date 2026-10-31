@@ -7,7 +7,7 @@ import {
   type SegmentsSummary,
 } from '@rfm-matrix/core';
 import { useEffect, useRef, useState } from 'react';
-import type { AnalysisHandle } from '../analysis/analysis-client';
+import type { AnalysisHandle, ScoringApplied } from '../analysis/analysis-client';
 import type { DoneMessage, SaveResult } from '../analysis/protocol';
 import { Toast } from '../components/Toast';
 import { GridPage } from '../grid/GridPage';
@@ -16,6 +16,7 @@ import { MovementScreen } from '../movement/MovementScreen';
 import { RulesScreen } from '../rules/RulesScreen';
 import { SegmentScreen } from '../segment/SegmentScreen';
 import { loadProject, type SnapshotSummary, saveProjectMap } from '../storage/projects';
+import { ThresholdsScreen } from '../thresholds/ThresholdsScreen';
 import { SaveStatus } from './SaveStatus';
 
 /** The project an analysis belongs to; `sourceFileName` marks a new analysis to save. */
@@ -42,7 +43,8 @@ type View =
   | { name: 'segment'; id: string }
   | { name: 'rules' }
   | { name: 'movement'; snapshots: SnapshotSummary[] }
-  | { name: 'how' };
+  | { name: 'how' }
+  | { name: 'thresholds' };
 
 export function AnalysisView({
   result,
@@ -95,6 +97,17 @@ export function AnalysisView({
     );
   }
 
+  function applyThresholds({ saved: kept, ...scored }: ScoringApplied) {
+    setShown((current) => ({ ...current, ...scored }));
+    setView({ name: 'grid' });
+    if (kept === null) return setToast('Score thresholds applied');
+    setToast(
+      kept.ok
+        ? 'Score thresholds applied and saved on this device'
+        : 'Score thresholds applied, but could not be saved on this device',
+    );
+  }
+
   async function showMovement() {
     const loaded = projectId ? await load(projectId) : undefined;
     setView({ name: 'movement', snapshots: loaded?.snapshots ?? [] });
@@ -113,6 +126,7 @@ export function AnalysisView({
           map={map}
           onOpenSegment={(id) => setView({ name: 'segment', id })}
           onEditRules={() => setView({ name: 'rules' })}
+          onThresholds={() => setView({ name: 'thresholds' })}
           onHowScores={() => setView({ name: 'how' })}
           {...(projectId ? { onMovement: () => void showMovement() } : {})}
         />
@@ -153,6 +167,17 @@ export function AnalysisView({
           cellCustomers={shown.cellCustomers}
           analysisDate={shown.analysisDate}
           onBack={() => setView({ name: 'grid' })}
+        />
+      )}
+      {view.name === 'thresholds' && (
+        <ThresholdsScreen
+          scoring={shown.scoring}
+          breakpoints={shown.breakpoints}
+          map={map}
+          session={handle.session}
+          saving={saved === 'saving'}
+          onApplied={applyThresholds}
+          onClose={() => setView({ name: 'grid' })}
         />
       )}
       {toast && <Toast message={toast} onClose={() => setToast(null)} />}

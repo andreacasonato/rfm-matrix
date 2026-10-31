@@ -18,6 +18,8 @@ type Props = {
   map?: SegmentMap;
   onOpenSegment(segmentId: string): void;
   onEditRules?(): void;
+  /** Score thresholds (U5): what counts as a 1 to 5. */
+  onThresholds?(): void;
   /** Only for a saved project (S10). */
   onMovement?(): void;
   onHowScores?(): void;
@@ -29,6 +31,7 @@ export function GridPage({
   map = defaultSegmentMap,
   onOpenSegment,
   onEditRules,
+  onThresholds,
   onMovement,
   onHowScores,
 }: Props) {
@@ -44,9 +47,21 @@ export function GridPage({
         <Heatmap cells={result.grid} segments={map.segments} onOpen={onOpenSegment} />
         <SegmentPanel summary={result.segments} onOpen={onOpenSegment} />
       </div>
-      {(onEditRules || onMovement) && (
-        <div className="flex flex-wrap gap-3">
-          {onEditRules && <Button onClick={onEditRules}>Edit segment rules</Button>}
+      {(onThresholds || onEditRules || onMovement) && (
+        <div className="flex flex-wrap items-start gap-x-6 gap-y-4">
+          {/* The two kinds of rule, each with what it decides, so they are not mixed up. */}
+          {onThresholds && (
+            <div className="flex flex-col items-start gap-1">
+              <Button onClick={onThresholds}>Score thresholds</Button>
+              <p className="text-small text-text-secondary">What counts as a 1 to 5</p>
+            </div>
+          )}
+          {onEditRules && (
+            <div className="flex flex-col items-start gap-1">
+              <Button onClick={onEditRules}>Edit segment rules</Button>
+              <p className="text-small text-text-secondary">Which scores make each segment</p>
+            </div>
+          )}
           {onMovement && <Button onClick={onMovement}>Movement</Button>}
         </div>
       )}

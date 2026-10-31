@@ -1,5 +1,12 @@
 // @vitest-environment jsdom
-import { defaultSegmentMap, type Movement, notInEarlier, notInLater } from '@rfm-matrix/core';
+import {
+  defaultScoring,
+  defaultSegmentMap,
+  type Movement,
+  notInEarlier,
+  notInLater,
+  type ScoringMethods,
+} from '@rfm-matrix/core';
 import { act, cleanup, fireEvent, render, screen, within } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
 import type { SnapshotSummary } from '../storage/projects';
@@ -13,6 +20,7 @@ const snapshot = (id: string, day: string, file: string): SnapshotSummary => ({
   sourceFileName: file,
   analysisDate: day,
   customerCount: 100,
+  scoring: defaultScoring,
 });
 const snapshots = [
   snapshot('s1', '2026-08-01', 'aug.csv'),
@@ -111,5 +119,23 @@ describe('Movement (S10, PRD story 8)', () => {
     expect(screen.getByRole('status').textContent).toContain('Movement needs two analyses');
     expect(document.body.textContent).toContain('Upload new export');
     expect(fake.compare).not.toHaveBeenCalled();
+  });
+
+  it('says when the two analyses used different score thresholds (U5)', async () => {
+    await setup();
+    expect(screen.queryByText(/different score thresholds/)).toBeNull();
+    cleanup();
+    const own: ScoringMethods = {
+      ...defaultScoring,
+      m: { method: 'fixed', breaks: [50, 100, 200, 400] },
+    };
+    await setup([
+      snapshots[0] as SnapshotSummary,
+      { ...(snapshots[1] as SnapshotSummary), scoring: own },
+    ]);
+    expect(screen.getByText('These analyses used different score thresholds')).toBeTruthy();
+    expect(document.body.textContent).toContain(
+      'some moves come from the change, not from customers',
+    );
   });
 });

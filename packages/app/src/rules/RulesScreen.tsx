@@ -81,8 +81,9 @@ export function RulesScreen({ saved, segments, cellCustomers, session, onSave, o
       </div>
       <section className="flex flex-col gap-3 rounded-panel border border-border bg-surface p-6">
         <p className="text-text-secondary">
-          Each square holds the customers with that recency (R) and frequency (F) score. Pick the
-          segment they belong to; the counts update as you go.
+          Scores 1 to 5 come from your score thresholds (Score thresholds, on the grid). Here you
+          choose which scores make each segment: each square holds the customers with that recency
+          (R) and frequency (F) score. Pick the segment they belong to; the counts update as you go.
         </p>
         <label className="flex items-center gap-2">
           <input

@@ -1,12 +1,12 @@
 // The projects saved on this device, read from the page (Start, Project and data) (S8).
-import type { SegmentMap } from '@rfm-matrix/core';
+import type { ScoringMethods, SegmentMap } from '@rfm-matrix/core';
 import { dbExists, openDb } from './db';
 import type { ProjectRecord, SegmentMapRecord, SnapshotRecord } from './schema';
 
 export type SnapshotSummary = Pick<
   SnapshotRecord,
   'id' | 'createdAt' | 'sourceFileName' | 'analysisDate' | 'customerCount'
->;
+> & { scoring: ScoringMethods };
 export type ProjectSummary = {
   id: string;
   name: string;
@@ -26,6 +26,7 @@ const summary = (s: SnapshotRecord): SnapshotSummary => ({
   sourceFileName: s.sourceFileName,
   analysisDate: s.analysisDate,
   customerCount: s.customerCount,
+  scoring: s.frozenConfig.scoring,
 });
 
 const asMap = ({ segments, cells }: SegmentMapRecord): SegmentMap => ({ segments, cells });

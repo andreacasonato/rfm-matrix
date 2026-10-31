@@ -36,12 +36,13 @@ flowchart LR
 | Start | How do I begin? | Upload orders | Saved projects on this device; one-line privacy promise; "Try sample data" | Empty: upload and sample shown large. Error: storage unavailable, warn nothing will be saved |
 | Upload and preview | Is this the right file? | Continue | File name, row count, first 20 rows | Loading: streaming row counter. Error: unreadable file, with line number and fix |
 | Map columns | Which column is which? | Confirm columns | Required (customer, order ID, date, amount), optional (email, status), preset guesses | Error: required field unmapped, highlighted with reason |
-| Clean and settings | Which orders count? | Run analysis | Status filters, gross/net, refunds, analysis date, lookback, scoring method, excluded counts | Warning: over 50% of rows excluded |
+| Clean and settings | Which orders count? | Run analysis | Status filters, gross/net, refunds, analysis date, lookback, score thresholds, excluded counts | Warning: over 50% of rows excluded |
 | Processing | How long will this take? | Cancel | Progress bar, rows read, customers found | Error: too large or failed, with diagnostics copy |
 | RFM grid | Where are my customers and revenue? | Open segment | 11 segments: count, share of customers, share of revenue; scoring summary | Never empty (sample offered). Warning: under 5 customers |
 | Segment detail | Who is in this segment, and what should I do? | Export | Plain-words definition, suggested action, sortable customer list with R, F, M | Empty: "No customers here right now" with meaning |
+| Score thresholds | What does a customer need to score 1 to 5? | Apply thresholds | Per R, F and M: let the app decide (quintiles) or own thresholds in plain words, customers per score, live | Error: thresholds not rising or not plain numbers, explained in place, apply blocked. A saved analysis is updated in place |
 | Segment rules | Which scores belong to which segment? | Save rules | Editable map, coverage check, Reset to default | Error: cell unassigned or doubly assigned, save blocked |
-| Movement | Who moved since last time? | Export | From-to table between two snapshots, biggest flows first | Empty: only one snapshot, explains how to make a second |
+| Movement | Who moved since last time? | Export | From-to table between two snapshots, biggest flows first | Empty: only one snapshot, explains how to make a second. Warning: the two used different score thresholds |
 | Project and data | What is saved on this device? | Save project file | Snapshots, settings, storage used | Destructive: Delete all data |
 | How scores work | How are scores calculated? | — | Method, breakpoints, bin sizes, limits of RFM | — |
 
