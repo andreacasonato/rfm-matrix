@@ -19,7 +19,7 @@ export function SegmentPanel({ summary, onOpen }: Props) {
   const [sort, setSort] = useState<SegmentSort>({ key: 'segment' });
   const header = { sort, onSort: (column: SegmentSort['key']) => setSort(nextSort(sort, column)) };
   return (
-    <div className="overflow-x-auto rounded-panel border border-border bg-surface p-4">
+    <div className="overflow-x-auto rounded-panel border border-border bg-surface p-3 sm:p-4">
       <table className="w-full border-collapse text-left">
         <caption className="pb-2 text-left text-section font-semibold">Segments</caption>
         <thead>

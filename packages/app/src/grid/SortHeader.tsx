@@ -33,8 +33,10 @@ export function SortHeader({
       <button
         type="button"
         onClick={() => onSort(column)}
-        className={`inline-flex items-center gap-1 rounded-control hover:text-text-primary hover:underline underline-offset-4 ${
-          align === 'right' ? 'flex-row-reverse' : ''
+        // The arrow wraps under the label when the column is tight, so a narrow phone never
+        // scrolls the table sideways.
+        className={`inline-flex flex-wrap items-center gap-x-1 rounded-control hover:text-text-primary hover:underline underline-offset-4 ${
+          align === 'right' ? 'justify-end' : ''
         } ${direction ? 'font-semibold text-text-primary' : ''}`}
       >
         {children}
