@@ -24,6 +24,19 @@
     @apply bg-canvas font-sans text-body text-text-primary antialiased;
   }
 
+  /* Tailwind 4 leaves buttons on the default arrow; anything clickable shows the hand. */
+  button,
+  select,
+  summary,
+  label:has(input:not(:disabled)),
+  input:is([type="checkbox"], [type="radio"], [type="file"]) {
+    cursor: pointer;
+  }
+
+  :is(button, select, input):disabled {
+    cursor: not-allowed;
+  }
+
   :focus-visible {
     @apply outline-2 outline-offset-2 outline-action-primary;
   }
