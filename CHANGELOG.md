@@ -5,6 +5,25 @@ What changed in each release, written for the people who use the app. Versions f
 
 ## Unreleased
 
+### New
+
+- **Score thresholds:** decide what a customer needs for each score from 1 to 5, in plain words
+  ("M5: spent more than 300", "R5: ordered within 30 days"), and see how many of your customers
+  each score holds before you apply it. Open it from the grid after an analysis, or use the same
+  cards on Clean and settings. A saved analysis keeps the new thresholds.
+- **Guide:** what RFM is, how scores and segments work, and how to use the app, from the name bar
+  on every screen.
+- **Sort the segment list** by customers, share or revenue, highest or lowest first.
+- **Movement** warns when two analyses used different score thresholds.
+
+### Better
+
+- The sample store is dated by your computer's clock, so it always looks current.
+- Everything clickable shows the hand cursor.
+- Disabled buttons are readable instead of faded; revenue bars and the heatmap caption are
+  clearer, especially in the dark theme.
+- The segment list fits its panel on small phones and zoomed-in screens.
+
 ## 0.1.0 (2026-10-30)
 
 The first release, for early testers.
