@@ -13,6 +13,9 @@ What changed in each release, written for the people who use the app. Versions f
   cards on Clean and settings. A saved analysis keeps the new thresholds.
 - **Guide:** what RFM is, how scores and segments work, and how to use the app, from the name bar
   on every screen.
+- **What your file needs:** the upload screen and the Guide list the columns an order export
+  must have (customer ID or email, order ID, order date and amount), the date and amount forms
+  the app reads, and a small example.
 - **Sort the segment list** by customers, share or revenue, highest or lowest first.
 - **Movement** warns when two analyses used different score thresholds.
 

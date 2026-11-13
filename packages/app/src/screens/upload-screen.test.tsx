@@ -50,6 +50,31 @@ describe('UploadScreen', () => {
     expect(screen.getByTestId('drop-zone')).toBeTruthy();
   });
 
+  it('shows what the file needs until a file is chosen, and again after Choose another file', async () => {
+    const fake = fakePreview();
+    const { container } = render(
+      <UploadScreen onBack={() => {}} onContinue={() => {}} previewFile={fake.previewFile} />,
+    );
+    const heading = () => screen.queryByRole('heading', { name: 'What your file needs' });
+    expect(heading()).toBeTruthy();
+    chooseFile(container);
+    expect(heading()).toBeNull();
+    await act(async () => fake.calls[0]?.resolve(preview()));
+    expect(heading()).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Choose another file' }));
+    expect(heading()).toBeTruthy();
+  });
+
+  it('hides what the file needs while showing a read error', async () => {
+    const fake = fakePreview();
+    const { container } = render(
+      <UploadScreen onBack={() => {}} onContinue={() => {}} previewFile={fake.previewFile} />,
+    );
+    chooseFile(container);
+    await act(async () => fake.calls[0]?.reject(new Error('broken')));
+    expect(screen.queryByRole('heading', { name: 'What your file needs' })).toBeNull();
+  });
+
   it('shows a live row counter while reading, and Cancel returns to the drop zone', async () => {
     const fake = fakePreview();
     const { container } = render(

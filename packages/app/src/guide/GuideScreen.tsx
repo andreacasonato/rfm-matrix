@@ -2,6 +2,7 @@
 // over the current screen, which stays as it was, so an analysis in progress is never lost.
 import { type ReactNode, useEffect, useRef } from 'react';
 import { Button } from '../components/Button';
+import { FileRequirements } from '../upload/FileRequirements';
 import { SegmentGuide } from './SegmentGuide';
 
 const panel = 'flex flex-col gap-3 rounded-panel border border-border bg-surface p-6';
@@ -115,6 +116,10 @@ export function GuideScreen({ onBack }: { onBack(): void }) {
           A month later, add your new export to the same project and open <strong>Movement</strong>{' '}
           to see who moved between segments.
         </p>
+      </Section>
+
+      <Section title="What your file needs">
+        <FileRequirements />
       </Section>
 
       <Section title="What RFM cannot tell you">

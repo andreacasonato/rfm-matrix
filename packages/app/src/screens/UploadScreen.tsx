@@ -7,6 +7,7 @@ import { Button } from '../components/Button';
 import { DropZone } from '../components/DropZone';
 import { Notice } from '../components/Notice';
 import { recordError } from '../diagnostics/diagnostics';
+import { FileRequirements } from '../upload/FileRequirements';
 import { FormatControls } from './FormatControls';
 import { PreviewTable } from './PreviewTable';
 import { describeReadFailure } from './unreadable';
@@ -74,7 +75,15 @@ export function UploadScreen({ onBack, onContinue, previewFile = startPreview }:
         </Button>
       </div>
 
-      {state.status === 'empty' && <DropZone onFile={(file) => read(file)} />}
+      {state.status === 'empty' && (
+        <>
+          <DropZone onFile={(file) => read(file)} />
+          <section className="flex flex-col gap-3 rounded-panel border border-border bg-surface p-6">
+            <h2 className="text-section font-semibold">What your file needs</h2>
+            <FileRequirements />
+          </section>
+        </>
+      )}
 
       {state.status === 'reading' && (
         <section
