@@ -5,8 +5,9 @@ Read this file at the start of every session. If a request conflicts with it, st
 ## What this project is
 
 RFM Matrix: a free, open-source (MIT) web app that turns an e-commerce order export
-(CSV or XLSX) into an RFM segment grid. It runs entirely in the browser. There is no
-server, no account and no network request after the page loads.
+(CSV for now; XLSX is deferred, see ADR-0011) into an RFM segment grid. It runs entirely
+in the browser. There is no server, no account and no network request after the page
+loads.
 
 ## Read before any change
 
@@ -22,7 +23,7 @@ server, no account and no network request after the page loads.
 - Packages:
   - `packages/core`: scoring rules, segment map, movement. Pure functions. Imports
     nothing from `io`, `app`, React, the DOM or browser storage.
-  - `packages/io`: streaming CSV/XLSX parsing and safe CSV export. May import `core`.
+  - `packages/io`: streaming CSV parsing and safe CSV export. May import `core`.
   - `packages/app`: React UI, Web Worker orchestration, IndexedDB persistence.
     May import `core` and `io`.
 - Scoring and parsing run in a Web Worker, never on the main thread.

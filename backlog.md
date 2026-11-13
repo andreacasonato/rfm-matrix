@@ -11,3 +11,6 @@ Ideas go here instead of being built. Moving one into scope needs the maintainer
 - Export presets formatted for specific email tools
 - An "Update ready, reload" notice, so a new version takes over without closing every tab (ADR-0020)
 - A synthetic pair of exports from the same shop a month apart, for testing Movement in usability round 2
+- A downloadable example CSV with the required columns, next to "What your file needs"
+- Link the Map columns "Choose the column with…" messages back to "What your file needs"
+- Per-platform steps for exporting orders (where to click in Shopify, WooCommerce and others)

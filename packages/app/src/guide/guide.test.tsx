@@ -18,6 +18,7 @@ describe('Guide (U4)', () => {
       'From scores to segments',
       'The 11 segments',
       'Using the app in five steps',
+      'What your file needs',
       'What RFM cannot tell you',
     ]);
   });
@@ -34,6 +35,12 @@ describe('Guide (U4)', () => {
       expect(row?.textContent).toContain(segment.description);
       expect(row?.textContent).toContain(segment.suggestedAction);
     }
+  });
+
+  it('shows what the upload file needs, with the required columns', () => {
+    render(<GuideScreen onBack={() => {}} />);
+    const required = screen.getByRole('list', { name: 'Required columns' });
+    expect(within(required).getAllByRole('listitem')).toHaveLength(4);
   });
 
   it('goes back, and takes focus on opening so keyboard users land on it', () => {
